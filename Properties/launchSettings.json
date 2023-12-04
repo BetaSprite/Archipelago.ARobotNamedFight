@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Archipelago.ARobotNamedFight": {
+      "commandName": "Executable",
+      "executablePath": "E:\\SteamLibrary\\steamapps\\common\\A Robot Named Fight\\ARobotNamedFight.exe"
+    }
+  }
+}
