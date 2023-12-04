@@ -1,0 +1,7 @@
+
+*.vsidx
+*.suo
+*.dll
+*.pdb
+**/bin
+**/obj
