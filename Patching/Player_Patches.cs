@@ -20,7 +20,7 @@ namespace Archipelago.ARobotNamedFight.Patching
             {
                 if (ItemTracker.Instance.LastPickedMinorItemGlobal > -99)
                 {
-                    long itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal + 1;
+                    long itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal;
                     //ItemTracker.Instance.ModItem(itemType);
                     ArchipelagoClient.Instance.SendCheck(itemCheckNumber);
                     SaveGameManager.instance.Save();

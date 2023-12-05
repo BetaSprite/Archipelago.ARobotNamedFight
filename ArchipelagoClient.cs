@@ -22,6 +22,7 @@ namespace Archipelago.ARobotNamedFight
 {
     class ArchipelagoClient : IDisposable
     {
+        public const long LocationsStartID = 7331000;
         public string ConfigurationFileName = null;
         private ArchipelagoConfiguration _configuration = null;
         private static object _confLock = new object();
@@ -165,7 +166,7 @@ namespace Archipelago.ARobotNamedFight
                     Log.Debug($"Item received from AP Server! Name: {itemName}. ID: {item.Item}.  Location: {item.Location}.  Flags: {item.Flags}.  Player: {item.Player}.");
 
                     //CollectReceivedItem(item.Location);
-                    ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(item.Location, itemName));
+                    ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(item.Location - LocationsStartID, itemName));
                 }
                 catch (Exception ex)
 				{
@@ -181,7 +182,7 @@ namespace Archipelago.ARobotNamedFight
 			{
                 //long nextCheck = ItemTracker.Instance.NextCheckNumber;
                 //var locationInfo = session?.Locations?.ScoutLocationsAsync(nextCheck).Result;
-                string locationName = session.Locations.GetLocationNameFromId(checkNumber);
+                string locationName = session.Locations.GetLocationNameFromId(checkNumber + LocationsStartID);
 
                 //Log.Debug($"Next scout location from {nextCheck} count: {locationInfo.Locations.Length}");
 
@@ -206,10 +207,10 @@ namespace Archipelago.ARobotNamedFight
         {
             try
             {
-                string locationName = session.Locations.GetLocationNameFromId(checkNumber);
-                Log.Debug($"In SendCheck for {checkNumber}, name {locationName}");
-                NotificationManager.Instance.NotificationQueue.Enqueue($"S:{locationName}");
-                session.Locations.CompleteLocationChecks(checkNumber);
+                string locationName = session.Locations.GetLocationNameFromId(checkNumber + LocationsStartID);
+				Log.Debug($"In SendCheck for {checkNumber} / {checkNumber + LocationsStartID}, name {locationName}");
+				NotificationManager.Instance.NotificationQueue.Enqueue($"S:{locationName}");
+                session.Locations.CompleteLocationChecks(checkNumber + LocationsStartID);
                 //ItemTracker.Instance.NextCheckNumber = ItemTracker.Instance.NextCheckNumber + 1;
                 //session.DataStorage["NextCheckNumber"] = ItemTracker.Instance.NextCheckNumber;
             }
@@ -219,24 +220,70 @@ namespace Archipelago.ARobotNamedFight
 			}
         }
 
-        public void SendRunCompleted()
+        public void RunCompleted(GameMode gameMode)
+		{
+            Log.Debug($"In RunCompleted for game mode {gameMode}");
+			List<GameMode> handledGameModes = new List<GameMode>() { GameMode.MegaMap, GameMode.MirrorWorld, GameMode.Normal, GameMode.Spooky, GameMode.TrueCoOp };
+			if (handledGameModes.Contains(gameMode))
+			{
+				string dataStorageKey = $"{gameMode}RunsCompletedCount";
+                Log.Debug($"dataStorageKey = {dataStorageKey}");
+				string runsCompletedDataStorage = ArchipelagoClient.Instance.TryGetDataStorage(dataStorageKey);
+
+				Log.Debug($"runsCompletedDataStorage = {runsCompletedDataStorage}");
+				int runsCompleted = 0;
+				if (!string.IsNullOrEmpty(runsCompletedDataStorage))
+				{
+					int.TryParse(runsCompletedDataStorage, out runsCompleted);
+				}
+				runsCompleted++;
+
+				Log.Debug($"New runsCompleted value = {runsCompleted}");
+				ArchipelagoClient.Instance.SetDataStorage(dataStorageKey, runsCompleted.ToString());
+
+				//runsCompletedDataStorage = ArchipelagoClient.Instance.TryGetDataStorage(dataStorageKey);
+				//Log.Debug($"Data was stored as: {runsCompletedDataStorage}");
+
+                //Log.Debug("Sending goal status update");
+				//StatusUpdatePacket statusUpdatePacket = new StatusUpdatePacket();
+				//statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
+				//session.Socket.SendPacket(statusUpdatePacket);
+				
+                Log.Debug("All done");
+			}
+		}
+
+        public void SetDataStorage(string key, string value)
         {
-            StatusUpdatePacket statusUpdatePacket = new StatusUpdatePacket();
-            statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
-            session.Socket.SendPacket(statusUpdatePacket);
+            session.DataStorage[key] = value;
+        }
+
+        public string TryGetDataStorage(string key)
+        {
+            string value = null;
+
+            try
+            {
+                value = session.DataStorage[key];
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error in TryGetDataStorage: {ex}");
+            }
+
+            return value;
         }
 
         public void EnqueueUncollectedReceivedItems()
         {
             //TODOs:
-            // - If starting with an orb, avoid getting double Explorbs?
             // - When starting a new game, remove items from the map that have already been collected in previous runs (by location number, add minor IDs to activeGame.minorItemIdsCollected?)
             Log.Debug($"In CollectAllReceivedItems");
             Log.Debug($"--- {session.Items.AllItemsReceived.Count} items to receive");
             foreach (var item in session.Items.AllItemsReceived)
             {
                 string itemName = session.Items.GetItemName(item.Item);
-                ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>((int)item.Location, itemName));
+                ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>((int)item.Location - LocationsStartID, itemName));
             }
         }
 

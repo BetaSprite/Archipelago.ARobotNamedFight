@@ -404,6 +404,14 @@ namespace Archipelago.ARobotNamedFight
                         ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "BonusExplorb"));
                     }
 
+#if DEBUG
+                    if (ArchipelagoClient.Instance.Configuration.GodMode)
+					{
+						Log.Debug("Enqueue GodMode item collection");
+						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-99999, "GodModeInfinijump"));
+					}
+#endif
+
                     Log.Debug("Needs new game items");
                     ArchipelagoClient.Instance.EnqueueUncollectedReceivedItems();
 
@@ -440,23 +448,25 @@ namespace Archipelago.ARobotNamedFight
         public void CollectReceivedItem(long itemLocation)
 		{
             Log.Debug($"In CollectReceivedItem for itemId {itemLocation}");
-            if (itemLocation == -9999)
+			if (itemLocation == -9999)
 			{
-                MajorItem itemType = MajorItem.Explorb;
-                Log.Debug($"Major item {itemLocation} found to be {itemType}");
-
-                //Prevent the bonus Explorb from messing up the collection percentage
-                //SaveGameData activeGame = SaveGameManager.activeGame;
-                //Log.Debug($"Increasing total starting major items from {activeGame.layout.totalStartingMajorItems} to {activeGame.layout.totalStartingMajorItems + 1}");
-                //activeGame.layout.totalStartingMajorItems++;
-                //activeGame.layout.allNonTraversalItemsAdded.Add(itemType);
-
-                ItemTracker.Instance.AddSkipCheck();
-                Player.instance.CollectMajorItem(itemType);
-                Log.Debug($"Major item {itemType} collected from queue");
-                NotificationManager.Instance.NotificationQueue.Enqueue($"R:{itemType}");
-            }
-            else if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
+                Log.Debug("Receiving configured Explorb");
+				ReceiveMajorItem(MajorItem.Explorb);
+			}
+			else if (itemLocation == -99999)
+			{
+				Log.Debug($"Adding GodMode items");
+				ReceiveMajorItem(MajorItem.Infinijump);
+				ReceiveMajorItem(MajorItem.PhaseShot);
+				ReceiveMajorItem(MajorItem.FireBolt);
+				ReceiveMajorItem(MajorItem.ElectroCharge);
+				ReceiveMajorItem(MajorItem.ExplosiveBolt);
+				ReceiveMajorItem(MajorItem.BuzzsawShell);
+				ReceiveMajorItem(MajorItem.CognitiveStabilizer);
+				ReceiveMajorItem(MajorItem.BuzzsawGun);
+				ReceiveMajorItem(MajorItem.CelestialCharge);
+			}
+			else if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
             {
                 var minorItemType = ItemTracker.Instance.allAssignedMinorItems[itemLocation];
                 Log.Debug($"Minor item {itemLocation} found to be {minorItemType}");
@@ -473,17 +483,7 @@ namespace Archipelago.ARobotNamedFight
                 {
                     MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
                     Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
-
-                    //Prevent this major item from messing up the collection percentage
-                    //SaveGameData activeGame = SaveGameManager.activeGame;
-                    //Log.Debug($"Increasing total starting major items from {activeGame.layout.totalStartingMajorItems} to {activeGame.layout.totalStartingMajorItems + 1}");
-                    //activeGame.layout.totalStartingMajorItems++;
-                    //activeGame.layout.allNonTraversalItemsAdded.Add(itemType);
-
-                    ItemTracker.Instance.AddSkipCheck();
-                    Player.instance.CollectMajorItem(itemType);
-                    Log.Debug($"Major item {itemType} collected from queue");
-                    NotificationManager.Instance.NotificationQueue.Enqueue($"R:{itemType}");
+                    ReceiveMajorItem(itemType);
                 }
                 else
                 {
@@ -491,6 +491,14 @@ namespace Archipelago.ARobotNamedFight
                 }
             }
         }
+
+        private void ReceiveMajorItem(MajorItem itemType)
+        {
+			ItemTracker.Instance.AddSkipCheck();
+			Player.instance.CollectMajorItem(itemType);
+			Log.Debug($"Major item {itemType} collected from queue");
+			NotificationManager.Instance.NotificationQueue.Enqueue($"R:{itemType}");
+		}
 
         public void Dispose()
         {

@@ -13,11 +13,7 @@ namespace Archipelago.ARobotNamedFight.Patching
     {
         static void Prefix(SaveSlotData __instance)
 		{
-            List<GameMode> handledGameModes = new List<GameMode>(){ GameMode.MegaMap, GameMode.MirrorWorld, GameMode.Normal, GameMode.Spooky, GameMode.TrueCoOp };
-            if (handledGameModes.Contains(__instance.activeGameData.gameMode))
-			{
-                ArchipelagoClient.Instance.SendRunCompleted();
-			}
+			ArchipelagoClient.Instance.RunCompleted(__instance.activeGameData.gameMode);
 		}
     }
 }

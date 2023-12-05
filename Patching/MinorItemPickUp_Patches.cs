@@ -15,10 +15,10 @@ namespace Archipelago.ARobotNamedFight.Patching
             if (__instance.data.globalID == -99)
             {
                 Log.Debug("Picking up minor item drop from random enemy (globalID -99)");
-                if (!ArchipelagoClient.Instance.Configuration.SendMinorItemDropsAsChecks)
-                {
-                    ItemTracker.Instance.AddSkipCheck();
-                }
+                //if (!ArchipelagoClient.Instance.Configuration.SendMinorItemDropsAsChecks)
+                //{
+                //    ItemTracker.Instance.AddSkipCheck();
+                //}
             }
 
             ItemTracker.Instance.LastPickedMinorItemGlobal = __instance.data.globalID;
