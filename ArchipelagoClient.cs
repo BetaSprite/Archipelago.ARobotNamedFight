@@ -255,8 +255,10 @@ namespace Archipelago.ARobotNamedFight
 
         public void SetDataStorage(string key, string value)
         {
-            session.DataStorage[key] = value;
-        }
+            Log.Debug($"SetDataStorage key: {key}, value: {value}");
+            session.DataStorage[Scope.Slot, key] = value;
+			Log.Debug($"session.DataStorage[Scope.Slot, key] = value has been run");
+		}
 
         public string TryGetDataStorage(string key)
         {
@@ -264,7 +266,7 @@ namespace Archipelago.ARobotNamedFight
 
             try
             {
-                value = session.DataStorage[key];
+                value = session.DataStorage[Scope.Slot, key];
             }
             catch (Exception ex)
             {

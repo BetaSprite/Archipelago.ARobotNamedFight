@@ -139,7 +139,23 @@ namespace Archipelago.ARobotNamedFight.Patching
                 var statMod = Player.instance.gameObject.AddComponent<TemporaryCelestialCharge>();
                 statMod.Equip(Player.instance, 60f);
             }
-        }
+
+			string dataStorageKey = $"Test";
+			Log.Debug($"dataStorageKey = {dataStorageKey}");
+			string runsCompletedDataStorage = ArchipelagoClient.Instance.TryGetDataStorage(dataStorageKey);
+
+			Log.Debug($"runsCompletedDataStorage = {runsCompletedDataStorage}");
+			int runsCompleted = 0;
+			if (!string.IsNullOrEmpty(runsCompletedDataStorage))
+			{
+				int.TryParse(runsCompletedDataStorage, out runsCompleted);
+			}
+			runsCompleted++;
+
+			Log.Debug($"New runsCompleted value = {runsCompleted}");
+			ArchipelagoClient.Instance.SetDataStorage(dataStorageKey, runsCompleted.ToString());
+            Log.Debug("After SetDataStorage");
+		}
     }
 #endif
 }
