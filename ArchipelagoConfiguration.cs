@@ -10,17 +10,17 @@ using System.Xml.Serialization;
 
 namespace Archipelago.ARobotNamedFight
 {
-    public class ArchipelagoConfiguration
-    {
-        //public bool SendMinorItemDropsAsChecks = false;
-        public bool StartWithExplorb = true;
+	public class ArchipelagoConfiguration
+	{
+		//public bool SendMinorItemDropsAsChecks = false;
+		public bool StartWithExplorb = true;
 
 #if DEBUG
-        public bool GodMode = true;
+		public bool GodMode = true;
 #endif
 
-        public string url = "archipelago.gg:38281";
-        public string slot = "";
-        public string pass = null;
-    }
+		public string url = "archipelago.gg:38281";
+		public string slot = "";
+		public string pass = null;
+	}
 }

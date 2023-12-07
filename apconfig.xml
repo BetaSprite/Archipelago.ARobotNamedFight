@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ArchipelagoConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <url>localhost:38281</url>
-    <slot>BetaSpriteARNF</slot>
+	<url>localhost:38281</url>
+	<slot>BetaSpriteARNF</slot>
 </ArchipelagoConfiguration>

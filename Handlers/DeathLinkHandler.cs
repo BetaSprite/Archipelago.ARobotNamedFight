@@ -9,30 +9,30 @@ using System.Threading.Tasks;
 
 namespace Archipelago.ARobotNamedFight.Handlers
 {
-    //class DeathLinkHandler : IHandler
-    //{
-    //    private readonly DeathLinkService deathLink;
+	//class DeathLinkHandler : IHandler
+	//{
+	//	private readonly DeathLinkService deathLink;
 
-    //    private Thread thread;
+	//	private Thread thread;
 
-    //    private bool recievedDeath = false;
+	//	private bool recievedDeath = false;
 
-    //    private bool deathLinkActive = false;
+	//	private bool deathLinkActive = false;
 
-    //    public DeathLinkHandler(DeathLinkService deathLink)
-    //    {
-    //        Log.LogDebug("DeathLink handler constructor.");
-    //        this.deathLink = deathLink;
-    //    }
+	//	public DeathLinkHandler(DeathLinkService deathLink)
+	//	{
+	//		Log.LogDebug("DeathLink handler constructor.");
+	//		this.deathLink = deathLink;
+	//	}
 
-    //    public void Hook()
-    //    {
+	//	public void Hook()
+	//	{
 
-    //    }
+	//	}
 
-    //    public void UnHook()
-    //    {
+	//	public void UnHook()
+	//	{
 
-    //    }
-    //}
+	//	}
+	//}
 }

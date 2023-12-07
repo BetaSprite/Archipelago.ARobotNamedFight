@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Archipelago.ARobotNamedFight.Handlers
 {
-    internal interface IHandler
-    {
-        void Hook();
+	internal interface IHandler
+	{
+		void Hook();
 
-        void UnHook();
-    }
+		void UnHook();
+	}
 }

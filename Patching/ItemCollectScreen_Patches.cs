@@ -10,81 +10,81 @@ using UnityEngine.UI;
 
 namespace Archipelago.ARobotNamedFight.Patching
 {
-    [HarmonyPatch(typeof(ItemCollectScreen), nameof(ItemCollectScreen.Show))]
-    class ItemCollectScreen_Show_Patch
-    {
-        static bool Prefix(ItemInfo itemInfo)
-        {
-            Log.Debug("ItemCollectScreen_Show_Patch Prefix");
+	[HarmonyPatch(typeof(ItemCollectScreen), nameof(ItemCollectScreen.Show))]
+	class ItemCollectScreen_Show_Patch
+	{
+		static bool Prefix(ItemInfo itemInfo)
+		{
+			Log.Debug("ItemCollectScreen_Show_Patch Prefix");
 
-            if (!ItemTracker.Instance.InShrineOrShopCollection)
-            {
-                return false;
-            }
+			if (!ItemTracker.Instance.InShrineOrShopCollection)
+			{
+				return false;
+			}
 
-            return true;
-   //         if (ArchipelagoClient.Instance.Configuration.SkipItemCollectScreenPopups)
-   //         {
-   //             //GUI.Label(new Rect(10, 10, 100, 20), "Does this work?");
-   //             //Need to look into stealing the timer's UI...
-   //             return false;
-   //         }
+			return true;
+   //		 if (ArchipelagoClient.Instance.Configuration.SkipItemCollectScreenPopups)
+   //		 {
+   //			 //GUI.Label(new Rect(10, 10, 100, 20), "Does this work?");
+   //			 //Need to look into stealing the timer's UI...
+   //			 return false;
+   //		 }
 
-   //         bool overrideDescription = !ItemTracker.Instance.SkipSendCheck();
-   //         if (overrideDescription && itemInfo is MajorItemInfo)
+   //		 bool overrideDescription = !ItemTracker.Instance.SkipSendCheck();
+   //		 if (overrideDescription && itemInfo is MajorItemInfo)
 			//{
-   //             var mii = (MajorItemInfo)itemInfo;
-   //             if (References.MajorItemBlacklist.Contains(mii.type))
+   //			 var mii = (MajorItemInfo)itemInfo;
+   //			 if (References.MajorItemBlacklist.Contains(mii.type))
 			//	{
-   //                 overrideDescription = false;
+   //				 overrideDescription = false;
 			//	}
 			//}
 
-   //         if (overrideDescription)
-   //         {
-   //             long itemCheckNumber = -99;
+   //		 if (overrideDescription)
+   //		 {
+   //			 long itemCheckNumber = -99;
 
-   //             if (itemInfo is MajorItemInfo)
-   //             {
-   //                 var mii = (MajorItemInfo)itemInfo;
-   //                 if (ItemTracker.Instance.allAssignedMajorItemsReverse.ContainsKey(mii.type))
+   //			 if (itemInfo is MajorItemInfo)
+   //			 {
+   //				 var mii = (MajorItemInfo)itemInfo;
+   //				 if (ItemTracker.Instance.allAssignedMajorItemsReverse.ContainsKey(mii.type))
 			//		{
-   //                     itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[mii.type] + ItemTracker.Instance.allAssignedMinorItems.Count;
-   //                 }
-   //             }
-   //             else if (ItemTracker.Instance.LastPickedMinorItemGlobal > -99)
+   //					 itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[mii.type] + ItemTracker.Instance.allAssignedMinorItems.Count;
+   //				 }
+   //			 }
+   //			 else if (ItemTracker.Instance.LastPickedMinorItemGlobal > -99)
 			//	{
-   //                 //Increasing the index to start at 1 for count and send logic
-   //                 itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal + 1;
-   //             }
+   //				 //Increasing the index to start at 1 for count and send logic
+   //				 itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal + 1;
+   //			 }
 
-   //             if (itemCheckNumber > -99)
-   //             {
-   //                 var locationName = ArchipelagoClient.Instance.ScoutCheckLocationName(itemCheckNumber);
+   //			 if (itemCheckNumber > -99)
+   //			 {
+   //				 var locationName = ArchipelagoClient.Instance.ScoutCheckLocationName(itemCheckNumber);
 
-   //                 if (locationName != null)
-   //                 {
-   //                     itemInfo.fullName = $"{locationName}";
-   //                     itemInfo.description = $"Scouted location name for {itemCheckNumber}";
-   //                 }
-   //                 else
-   //                 {
-   //                     itemInfo.fullName = "Item sent to another player!";
-   //                     itemInfo.description = $"No location name found for {itemCheckNumber}, though...";
-   //                 }
-   //             }
-   //         }
+   //				 if (locationName != null)
+   //				 {
+   //					 itemInfo.fullName = $"{locationName}";
+   //					 itemInfo.description = $"Scouted location name for {itemCheckNumber}";
+   //				 }
+   //				 else
+   //				 {
+   //					 itemInfo.fullName = "Item sent to another player!";
+   //					 itemInfo.description = $"No location name found for {itemCheckNumber}, though...";
+   //				 }
+   //			 }
+   //		 }
 
-   //         return true;
-        }
-    }
+   //		 return true;
+		}
+	}
 
-    //[HarmonyPatch(typeof(ItemCollectScreen), nameof(ItemCollectScreen.WaitForJingle))]
-    //class ItemCollectScreen_WaitForJingle_Patch
-    //{
-    //    static void Postfix()
-    //    {
-    //        ItemTracker.Instance.ShowingItemCollectScreen = false;
-    //    }
-    //}
+	//[HarmonyPatch(typeof(ItemCollectScreen), nameof(ItemCollectScreen.WaitForJingle))]
+	//class ItemCollectScreen_WaitForJingle_Patch
+	//{
+	//	static void Postfix()
+	//	{
+	//		ItemTracker.Instance.ShowingItemCollectScreen = false;
+	//	}
+	//}
 }

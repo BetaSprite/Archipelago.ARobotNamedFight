@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Archipelago.ARobotNamedFight
 {
-    internal static class Log
+	internal static class Log
 	{
 		internal static ManualLogSource _logSource;
 
