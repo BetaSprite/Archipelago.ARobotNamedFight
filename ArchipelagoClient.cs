@@ -209,14 +209,17 @@ namespace Archipelago.ARobotNamedFight
 			return null;
 		}
 
-		public void SendCheck(long localCheckPosition, GameMode gameMode = GameMode.Normal)
+		public void SendCheck(long localCheckPosition, GameMode gameMode)
 		{
 			try
 			{
-				string locationName = session.Locations.GetLocationNameFromId(localCheckPosition + LocationsStartID);
-				Log.Debug($"In SendCheck for {localCheckPosition} / {localCheckPosition + LocationsStartID}, name {locationName}");
+				long offset = 0;
+				if (LocationIDOffsetPerGameMode.ContainsKey(gameMode)) offset = LocationIDOffsetPerGameMode[gameMode];
+				long finalCheckPosition = localCheckPosition + LocationsStartID + offset;
+				string locationName = session.Locations.GetLocationNameFromId(finalCheckPosition);
+				Log.Debug($"In SendCheck for {localCheckPosition} / {finalCheckPosition}, name {locationName}");
 				NotificationManager.Instance.NotificationQueue.Enqueue($"S:{locationName}");
-				session.Locations.CompleteLocationChecks(localCheckPosition + LocationsStartID);
+				session.Locations.CompleteLocationChecks(finalCheckPosition);
 				//ItemTracker.Instance.NextCheckNumber = ItemTracker.Instance.NextCheckNumber + 1;
 				//session.DataStorage["NextCheckNumber"] = ItemTracker.Instance.NextCheckNumber;
 			}
@@ -237,7 +240,7 @@ namespace Archipelago.ARobotNamedFight
 					int totalDifference = ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode) - ItemTracker.Instance.TotalLocationsInCurrentGame;
 					for (int i=0; i < totalDifference; i++)
 					{
-						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i);
+						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i, gameMode);
 					}
 					
 				}
