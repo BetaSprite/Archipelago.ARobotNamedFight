@@ -26,7 +26,7 @@ namespace Archipelago.ARobotNamedFight
 		public Dictionary<GameMode, int> LocationIDOffsetPerGameMode = new Dictionary<GameMode, int>()
 		{
 			{ GameMode.Normal, 0 },
-			{ GameMode.BossRush, 1000 },
+			{ GameMode.ClassicBossRush, 35 },
 		};
 		public string ConfigurationFileName = null;
 		private ArchipelagoConfiguration _configuration = null;
@@ -171,7 +171,7 @@ namespace Archipelago.ARobotNamedFight
 					Log.Debug($"Item received from AP Server! Name: {itemName}. ID: {item.Item}.  Location: {item.Location}.  Flags: {item.Flags}.  Player: {item.Player}.");
 
 					//CollectReceivedItem(item.Location);
-					ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(item.Location - LocationsStartID, itemName));
+					ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(item.Item - LocationsStartID, itemName));
 				}
 				catch (Exception ex)
 				{
@@ -209,10 +209,11 @@ namespace Archipelago.ARobotNamedFight
 			return null;
 		}
 
-		public void SendCheck(long localCheckPosition, GameMode gameMode)
+		public void SendCheck(long localCheckPosition)
 		{
 			try
 			{
+				GameMode gameMode = SaveGameManager.activeSlot.activeGameData.gameMode;
 				long offset = 0;
 				if (LocationIDOffsetPerGameMode.ContainsKey(gameMode)) offset = LocationIDOffsetPerGameMode[gameMode];
 				long finalCheckPosition = localCheckPosition + LocationsStartID + offset;
@@ -240,7 +241,7 @@ namespace Archipelago.ARobotNamedFight
 					int totalDifference = ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode) - ItemTracker.Instance.TotalLocationsInCurrentGame;
 					for (int i=0; i < totalDifference; i++)
 					{
-						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i, gameMode);
+						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i);
 					}
 					
 				}

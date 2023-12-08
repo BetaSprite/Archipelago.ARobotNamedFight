@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -234,10 +235,10 @@ namespace Archipelago.ARobotNamedFight
 		//	}
 		//}
 
-		public void ReplaceNonProgressionMajorItemInRooms(MajorItem majorItemType)
+		public void ReplaceMajorItemInRooms(MajorItem majorItemType)
 		{
-			Log.Debug($"In ReplaceNonProgressionMajorItemInRooms for {majorItemType}");
-			if (!References.MajorItemBlacklist.Contains(majorItemType))
+			Log.Debug($"In ReplaceMajorItemInRooms for {majorItemType}");
+			if (!References.MajorItemIsBlacklisted(majorItemType))
 			{
 				SaveGameData activeGame = SaveGameManager.activeGame;
 				RoomAbstract targetRoom = null;
@@ -269,7 +270,7 @@ namespace Archipelago.ARobotNamedFight
 					Random random = new Random();
 					MajorItem newItem = (MajorItem)values.GetValue(random.Next(values.Length));
 					Log.Debug($"Attempt to replace item with {newItem}");
-					while (majorItemsFoundInRooms.Contains(newItem) || References.MajorItemBlacklist.Contains(newItem))
+					while (majorItemsFoundInRooms.Contains(newItem) || References.MajorItemIsBlacklisted(newItem))
 					{
 						newItem = (MajorItem)values.GetValue(random.Next(values.Length));
 						Log.Debug($"Nope, try {newItem} instead?");
@@ -291,9 +292,17 @@ namespace Archipelago.ARobotNamedFight
 						activeGame.layout.bonusItemsAdded.Add(newItem);
 					}
 
-					Reset();
-					NeedsLoad = true;
-					RefreshItemTracker();
+					Log.Debug($"Attempting replacement in item tracker");
+					if (allAssignedMajorItemsReverse.ContainsKey(majorItemType))
+					{
+						long index = allAssignedMajorItemsReverse[majorItemType];
+						Log.Debug($"Original index {index} for {majorItemType}, and {allAssignedMajorItems[index]} is also found");
+						allAssignedMajorItems[index] = newItem;
+						Log.Debug($"Changed to {allAssignedMajorItems[index]}");
+						allAssignedMajorItemsReverse.Remove(majorItemType);
+						allAssignedMajorItemsReverse.Add(newItem, index);
+						Log.Debug($"And after that, reverse lookup for {newItem} has {allAssignedMajorItemsReverse[newItem]} at index {index}.");
+					}
 				}
 			}
 			else
@@ -360,7 +369,7 @@ namespace Archipelago.ARobotNamedFight
 							allAssignedMinorItems.Add(item.globalID, item.type);
 						}
 
-						if (!References.MajorItemBlacklist.Contains(roomAbstract.majorItem))
+						if (!References.MajorItemIsBlacklisted(roomAbstract.majorItem))
 						{
 							iMajorItemCounter++;
 							Log.Debug($"Adding major item {roomAbstract.majorItem} to list with ID {iMajorItemCounter}.");
@@ -479,34 +488,46 @@ namespace Archipelago.ARobotNamedFight
 				ReceiveMajorItem(MajorItem.BuzzsawGun);
 				ReceiveMajorItem(MajorItem.CelestialCharge);
 			}
-			else if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
-			{
-				var minorItemType = ItemTracker.Instance.allAssignedMinorItems[itemLocation];
-				Log.Debug($"Minor item {itemLocation} found to be {minorItemType}");
-
-				ItemTracker.Instance.AddSkipCheck();
-				Player.instance.CollectMinorItem(minorItemType);
-				Log.Debug($"Minor item {minorItemType} collected from queue");
-				NotificationManager.Instance.NotificationQueue.Enqueue($"R:{minorItemType}");
-			}
 			else
 			{
-				long majorItemId = itemLocation - ItemTracker.Instance.allAssignedMinorItems.Count;
-				if (ItemTracker.Instance.allAssignedMajorItems.ContainsKey(majorItemId))
+				itemLocation -= References.GetGameModeOffset();
+
+			    if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
 				{
-					MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
-					Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
-					ReceiveMajorItem(itemType);
+					var minorItemType = ItemTracker.Instance.allAssignedMinorItems[itemLocation];
+					Log.Debug($"Minor item {itemLocation} found to be {minorItemType}");
+
+					ItemTracker.Instance.AddSkipCheck();
+					Player.instance.CollectMinorItem(minorItemType);
+					Log.Debug($"Minor item {minorItemType} collected from queue");
+					NotificationManager.Instance.NotificationQueue.Enqueue($"R:{minorItemType}");
 				}
 				else
 				{
-					Log.Debug($"Received location {itemLocation}, which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
+					long majorItemId = itemLocation - ItemTracker.Instance.allAssignedMinorItems.Count;
+					if (ItemTracker.Instance.allAssignedMajorItems.ContainsKey(majorItemId))
+					{
+						MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
+						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
+						ReceiveMajorItem(itemType);
+					}
+					else
+					{
+						Log.Debug($"Received location {itemLocation} (modified ID {majorItemId}), which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
+					}
 				}
 			}
 		}
 
 		private void ReceiveMajorItem(MajorItem itemType)
 		{
+			//If we're receiving an activated item, drop the current one and give this straight to the player
+			if (References.ActivatedItemList.Contains(itemType) && Player.instance.activatedItem)
+			{
+				var currentRoom = LayoutManager.CurrentRoom;
+				Player.instance.DropEquippedActiveItem(Player.instance.transform.position, currentRoom);
+			}
+
 			ItemTracker.Instance.AddSkipCheck();
 			Player.instance.CollectMajorItem(itemType);
 			Log.Debug($"Major item {itemType} collected from queue");

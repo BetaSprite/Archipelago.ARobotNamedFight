@@ -43,17 +43,19 @@ namespace Archipelago.ARobotNamedFight.Patching
 	{
 		static bool Prefix(MajorItem itemType)
 		{
-			Log.Debug($"Player_CollectMajorItem_Patch.Prefix picked up a {itemType}");
+			Log.Debug($"Player_CollectMajorItem_Patch.Prefix picked up a {itemType} in game mode {SaveGameManager.activeSlot.activeGameData.gameMode}");
 
 			MajorItemInfo itemInfo = new MajorItemInfo() { fullName = "Error", description = "Error" };
 			ItemManager.items.TryGetValue(itemType, out itemInfo);
-			if (!ItemTracker.Instance.SkipSendCheck(true) && !References.MajorItemBlacklist.Contains(itemType))
+			if (!ItemTracker.Instance.SkipSendCheck(true) && !References.MajorItemIsBlacklisted(itemType))
 			{
 				long itemCheckNumber = -99;
 				if (ItemTracker.Instance.allAssignedMajorItemsReverse.ContainsKey(itemType))
 				{
 					itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[itemType] + ItemTracker.Instance.allAssignedMinorItems.Count + 1;
 				}
+
+				Log.Debug($"Item check number: {itemCheckNumber}");
 
 				if (itemCheckNumber > -99)
 				{
@@ -64,30 +66,36 @@ namespace Archipelago.ARobotNamedFight.Patching
 				}
 			}
 
-			SaveGameData activeGame = SaveGameManager.activeGame;
-			Log.Debug($"layout.traversalItemCount: {activeGame.layout.traversalItemCount} + layout.minorItemCount {activeGame.layout.minorItemCount} + layout.bonusItemsAdded.Count {activeGame.layout.bonusItemsAdded.Count}");
-			Log.Debug($"Total items collected so far: {activeGame.itemsCollected.Count}");
-			foreach (MajorItem beh in activeGame.itemsCollected)
-			{
-				Log.Debug($"Item that has previously been collected: {beh}");
-			}
+			//SaveGameData activeGame = SaveGameManager.activeGame;
+			//Log.Debug($"layout.traversalItemCount: {activeGame.layout.traversalItemCount} + layout.minorItemCount {activeGame.layout.minorItemCount} + layout.bonusItemsAdded.Count {activeGame.layout.bonusItemsAdded.Count}");
+			//Log.Debug($"Total items collected so far: {activeGame.itemsCollected.Count}");
+			//foreach (MajorItem beh in activeGame.itemsCollected)
+			//{
+			//	Log.Debug($"Item that has previously been collected: {beh}");
+			//}
 
-			foreach (MajorItem beh in activeGame.layout.itemOrder)
-			{
-				Log.Debug($"Item in order: {beh}");
-			}
+			//if (activeGame.layout.itemOrder != null)
+			//{
+			//	foreach (MajorItem beh in activeGame.layout.itemOrder)
+			//	{
+			//		Log.Debug($"Item in order: {beh}");
+			//	}
+			//}
 
-			foreach (MajorItem beh in activeGame.layout.bonusItemsAdded)
-			{
-				Log.Debug($"Bonus items added: {beh}");
-			}
+			//if (activeGame.layout.bonusItemsAdded != null)
+			//{
+			//	foreach (MajorItem beh in activeGame.layout.bonusItemsAdded)
+			//	{
+			//		Log.Debug($"Bonus items added: {beh}");
+			//	}
+			//}
 
-			var majorItemsCollected = activeGame.itemsCollected.FindAll((i) => activeGame.layout.itemOrder.Contains(i) || activeGame.layout.bonusItemsAdded.Contains(i)).Count;
-			Log.Debug($"majorItemsCollected: {majorItemsCollected}");
-			Log.Debug($"minorItemIdsCollected.Count: {activeGame.minorItemIdsCollected.Count}");
+			//var majorItemsCollected = activeGame.itemsCollected.FindAll((i) => activeGame.layout.itemOrder.Contains(i) || activeGame.layout.bonusItemsAdded.Contains(i)).Count;
+			//Log.Debug($"majorItemsCollected: {majorItemsCollected}");
+			//Log.Debug($"minorItemIdsCollected.Count: {activeGame.minorItemIdsCollected.Count}");
 
 			//If we're actually receiving a non-progression MajorItem, make sure that we swap out the designation in the maps, so that we can still pick up that location
-			ItemTracker.Instance.ReplaceNonProgressionMajorItemInRooms(itemType);
+			ItemTracker.Instance.ReplaceMajorItemInRooms(itemType);
 
 			return true;
 		}
