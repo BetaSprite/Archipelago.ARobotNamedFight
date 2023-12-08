@@ -52,7 +52,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 				long itemCheckNumber = -99;
 				if (ItemTracker.Instance.allAssignedMajorItemsReverse.ContainsKey(itemType))
 				{
-					itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[itemType] + ItemTracker.Instance.allAssignedMinorItems.Count + 1;
+					itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[itemType] + ItemTracker.Instance.allAssignedMinorItems.Count;
 				}
 
 				Log.Debug($"Item check number: {itemCheckNumber}");

@@ -22,7 +22,10 @@ namespace Archipelago.ARobotNamedFight.Patching
 				return false;
 			}
 
+			ItemTracker.Instance.InShrineOrShopCollection = false;
+
 			return true;
+
    //		 if (ArchipelagoClient.Instance.Configuration.SkipItemCollectScreenPopups)
    //		 {
    //			 //GUI.Label(new Rect(10, 10, 100, 20), "Does this work?");

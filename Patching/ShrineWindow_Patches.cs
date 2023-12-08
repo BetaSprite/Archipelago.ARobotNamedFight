@@ -27,9 +27,9 @@ namespace Archipelago.ARobotNamedFight.Patching
 
 		//	return codes.AsEnumerable();
 		//}
-		static void Postfix()
-		{
-			ItemTracker.Instance.InShrineOrShopCollection = false;
-		}
+		//static void Postfix()
+		//{
+		//	ItemTracker.Instance.InShrineOrShopCollection = false;
+		//}
 	}
 }

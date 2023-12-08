@@ -26,7 +26,7 @@ namespace Archipelago.ARobotNamedFight
 		public Dictionary<GameMode, int> LocationIDOffsetPerGameMode = new Dictionary<GameMode, int>()
 		{
 			{ GameMode.Normal, 0 },
-			{ GameMode.ClassicBossRush, 35 },
+			{ GameMode.ClassicBossRush, 50 },
 		};
 		public string ConfigurationFileName = null;
 		private ArchipelagoConfiguration _configuration = null;
@@ -233,7 +233,7 @@ namespace Archipelago.ARobotNamedFight
 		public void RunCompleted(GameMode gameMode)
 		{
 			Log.Debug($"In RunCompleted for game mode {gameMode}");
-			List<GameMode> handledGameModes = new List<GameMode>() { GameMode.MegaMap, GameMode.MirrorWorld, GameMode.Normal, GameMode.Spooky, GameMode.TrueCoOp };
+			List<GameMode> handledGameModes = new List<GameMode>() { GameMode.Normal, GameMode.ClassicBossRush };
 			if (handledGameModes.Contains(gameMode))
 			{
 				if (ItemTracker.Instance.TotalLocationsInCurrentGame < ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode))
@@ -243,7 +243,6 @@ namespace Archipelago.ARobotNamedFight
 					{
 						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i);
 					}
-					
 				}
 
 				//string dataStorageKey = $"{gameMode}RunsCompletedCount";
@@ -299,7 +298,7 @@ namespace Archipelago.ARobotNamedFight
 			foreach (var item in session.Items.AllItemsReceived)
 			{
 				string itemName = session.Items.GetItemName(item.Item);
-				ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>((int)item.Location - LocationsStartID, itemName));
+				ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>((int)item.Item - LocationsStartID, itemName));
 			}
 		}
 

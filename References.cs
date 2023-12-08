@@ -86,36 +86,6 @@ namespace Archipelago.ARobotNamedFight
 					MajorItem.TheBlueKey,
 					MajorItem.TheBlackKey,
 
-					MajorItem.DamageBoostAura,
-					MajorItem.AttackBoostAura,
-					MajorItem.SpeedBoostAura,
-					MajorItem.CelestialCharge,
-					MajorItem.CloakingDevice,
-					MajorItem.EnergyAxe,
-					MajorItem.ETHChip,
-					MajorItem.TheGlitchedKey,
-					MajorItem.HTSChip,
-					MajorItem.ModuleTransmogrifier,
-					MajorItem.NanoswarmGenerator,
-					MajorItem.OrphielsAltar,
-					MajorItem.PersonalTeleporter,
-					MajorItem.PhantasmalOrbs,
-					MajorItem.PowerShield,
-					MajorItem.RadialBolts,
-					MajorItem.RepairKit,
-					MajorItem.SearchBurst,
-					MajorItem.SedativeCloud,
-					MajorItem.SpontaneousGenerator,
-					MajorItem.ToxinCloud,
-					MajorItem.WaveBomb,
-					MajorItem.ZurvansPentangle,
-				}
-			},
-			{
-				GameMode.ClassicBossRush, new List<MajorItem>()
-				{
-					MajorItem.None,
-
 					//MajorItem.DamageBoostAura,
 					//MajorItem.AttackBoostAura,
 					//MajorItem.SpeedBoostAura,
@@ -140,12 +110,18 @@ namespace Archipelago.ARobotNamedFight
 					//MajorItem.WaveBomb,
 					//MajorItem.ZurvansPentangle,
 				}
+			},
+			{
+				GameMode.ClassicBossRush, new List<MajorItem>()
+				{
+					MajorItem.None,
+				}
 			}
 		};
 
 		private static Dictionary<GameMode, long> LocationOffsetPerGameMode = new Dictionary<GameMode, long>()
 		{
-			{ GameMode.ClassicBossRush, 35 }
+			{ GameMode.ClassicBossRush, 50 }
 		};
 
 		public static bool MajorItemIsBlacklisted(MajorItem item)

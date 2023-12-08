@@ -44,7 +44,8 @@ namespace Archipelago.ARobotNamedFight
 
 		Dictionary<GameMode, int> ExpectedLocationCountPerGameMode = new Dictionary<GameMode, int>()
 		{
-			{ GameMode.Normal, 35 }
+			{ GameMode.Normal, 36 },
+			{ GameMode.ClassicBossRush, 13 },
 		};
 
 
@@ -280,18 +281,6 @@ namespace Archipelago.ARobotNamedFight
 					Log.Debug($"Swapping major item {targetRoom.majorItem} in map with dummy item {newItem}");
 					targetRoom.majorItem = newItem;
 
-					Log.Debug($"Swapping item in itemOrder and bonusItemsAdded");
-					if (activeGame.layout.itemOrder.Contains(majorItemType))
-					{
-						activeGame.layout.itemOrder.Remove(majorItemType);
-						activeGame.layout.itemOrder.Add(newItem);
-					}
-					if (activeGame.layout.bonusItemsAdded.Contains(majorItemType))
-					{
-						activeGame.layout.bonusItemsAdded.Remove(majorItemType);
-						activeGame.layout.bonusItemsAdded.Add(newItem);
-					}
-
 					Log.Debug($"Attempting replacement in item tracker");
 					if (allAssignedMajorItemsReverse.ContainsKey(majorItemType))
 					{
@@ -302,6 +291,25 @@ namespace Archipelago.ARobotNamedFight
 						allAssignedMajorItemsReverse.Remove(majorItemType);
 						allAssignedMajorItemsReverse.Add(newItem, index);
 						Log.Debug($"And after that, reverse lookup for {newItem} has {allAssignedMajorItemsReverse[newItem]} at index {index}.");
+					}
+
+					Log.Debug($"Swapping item in itemOrder and bonusItemsAdded");
+					try
+					{
+						if (activeGame.layout.itemOrder != null && activeGame.layout.itemOrder.Contains(majorItemType))
+						{
+							activeGame.layout.itemOrder.Remove(majorItemType);
+							activeGame.layout.itemOrder.Add(newItem);
+						}
+						if (activeGame.layout.bonusItemsAdded != null && activeGame.layout.bonusItemsAdded.Contains(majorItemType))
+						{
+							activeGame.layout.bonusItemsAdded.Remove(majorItemType);
+							activeGame.layout.bonusItemsAdded.Add(newItem);
+						}
+					}
+					catch (Exception ex) 
+					{
+						Log.Error(ex);
 					}
 				}
 			}
@@ -371,10 +379,10 @@ namespace Archipelago.ARobotNamedFight
 
 						if (!References.MajorItemIsBlacklisted(roomAbstract.majorItem))
 						{
-							iMajorItemCounter++;
 							Log.Debug($"Adding major item {roomAbstract.majorItem} to list with ID {iMajorItemCounter}.");
 							allAssignedMajorItems.Add(iMajorItemCounter, roomAbstract.majorItem);
 							allAssignedMajorItemsReverse.Add(roomAbstract.majorItem, iMajorItemCounter);
+							iMajorItemCounter++;
 						}
 						else if (roomAbstract.majorItem != MajorItem.None)
 						{
@@ -521,7 +529,7 @@ namespace Archipelago.ARobotNamedFight
 
 		private void ReceiveMajorItem(MajorItem itemType)
 		{
-			//If we're receiving an activated item, drop the current one and give this straight to the player
+			//If we're receiving an activated item, drop the current one and give the new one to the player
 			if (References.ActivatedItemList.Contains(itemType) && Player.instance.activatedItem)
 			{
 				var currentRoom = LayoutManager.CurrentRoom;

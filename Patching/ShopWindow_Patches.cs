@@ -16,9 +16,9 @@ namespace Archipelago.ARobotNamedFight.Patching
 			ItemTracker.Instance.InShrineOrShopCollection = true;
 		}
 
-		static void Postfix()
-		{
-			ItemTracker.Instance.InShrineOrShopCollection = false;
-		}
+		//static void Postfix()
+		//{
+		//	ItemTracker.Instance.InShrineOrShopCollection = false;
+		//}
 	}
 }
