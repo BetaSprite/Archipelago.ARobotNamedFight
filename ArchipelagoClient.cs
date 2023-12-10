@@ -23,11 +23,6 @@ namespace Archipelago.ARobotNamedFight
 	class ArchipelagoClient : IDisposable
 	{
 		public const long LocationsStartID = 73310000;
-		public Dictionary<GameMode, int> LocationIDOffsetPerGameMode = new Dictionary<GameMode, int>()
-		{
-			{ GameMode.Normal, 0 },
-			{ GameMode.ClassicBossRush, 50 },
-		};
 		public string ConfigurationFileName = null;
 		private ArchipelagoConfiguration _configuration = null;
 		private static object _confLock = new object();
@@ -215,7 +210,7 @@ namespace Archipelago.ARobotNamedFight
 			{
 				GameMode gameMode = SaveGameManager.activeSlot.activeGameData.gameMode;
 				long offset = 0;
-				if (LocationIDOffsetPerGameMode.ContainsKey(gameMode)) offset = LocationIDOffsetPerGameMode[gameMode];
+				if (References.LocationIDOffsetPerGameMode.ContainsKey(gameMode)) offset = References.LocationIDOffsetPerGameMode[gameMode];
 				long finalCheckPosition = localCheckPosition + LocationsStartID + offset;
 				string locationName = session.Locations.GetLocationNameFromId(finalCheckPosition);
 				Log.Debug($"In SendCheck for {localCheckPosition} / {finalCheckPosition}, name {locationName}");
@@ -289,16 +284,34 @@ namespace Archipelago.ARobotNamedFight
    //		 return value;
 		}
 
-		public void EnqueueUncollectedReceivedItems()
+		public void HandleAllReceivedItems()
 		{
-			//TODOs:
-			// - When starting a new game, remove items from the map that have already been collected in previous runs (by location number, add minor IDs to activeGame.minorItemIdsCollected?)
-			Log.Debug($"In CollectAllReceivedItems");
+			Log.Debug($"In HandleAllReceivedItems");
 			Log.Debug($"--- {session.Items.AllItemsReceived.Count} items to receive");
+			int iQueueCountdown = session.Items.AllItemsReceived.Count;
 			foreach (var item in session.Items.AllItemsReceived)
 			{
 				string itemName = session.Items.GetItemName(item.Item);
 				ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>((int)item.Item - LocationsStartID, itemName));
+			}
+
+			//We need to remove these items from the queue, as well, because if we just connected, the queue has stuff in it, but if not, it doesn't
+			while (iQueueCountdown > 0 && session.Items.Any())
+			{
+				session.Items.DequeueItem();
+				iQueueCountdown--;
+			}
+		}
+
+		public void HandleAllCheckedLocations()
+		{
+			//TODOs:
+			// - When starting a new game, remove items from the map that have already been collected in previous runs (by location number, add minor IDs to activeGame.minorItemIdsCollected?)
+			Log.Debug($"In HandleAllCheckedLocations");
+			Log.Debug($"--- {session.Locations.AllLocationsChecked.Count} items to receive");
+			foreach (var location in session.Locations.AllLocationsChecked)
+			{
+				ItemTracker.Instance.LocationExpendQueue.Enqueue(location - LocationsStartID);
 			}
 		}
 

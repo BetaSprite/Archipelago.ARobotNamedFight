@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Newtonsoft.Json.Linq;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,8 @@ namespace Archipelago.ARobotNamedFight
 		public Dictionary<MajorItem, long> allAssignedMajorItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
 
 		public Queue<KeyValuePair<long, string>> ReceiptQueue { get; private set; } = new Queue<KeyValuePair<long, string>>();
+
+		public Queue<long> LocationExpendQueue { get; private set; } = new Queue<long>();
 
 		Dictionary<GameMode, int> ExpectedLocationCountPerGameMode = new Dictionary<GameMode, int>()
 		{
@@ -243,22 +246,9 @@ namespace Archipelago.ARobotNamedFight
 			{
 				SaveGameData activeGame = SaveGameManager.activeGame;
 				RoomAbstract targetRoom = null;
-				List<MajorItem> majorItemsFoundInRooms = new List<MajorItem>();
-				foreach (var roomAbstract in activeGame.layout.roomAbstracts)
-				{
-					if (!majorItemsFoundInRooms.Contains(roomAbstract.majorItem))
-					{
-						//Gather up the major items that already exist
-						//Log.Debug($"New major item found: {roomAbstract.majorItem}");
-						majorItemsFoundInRooms.Add(roomAbstract.majorItem);
 
-						if (roomAbstract.majorItem == majorItemType)
-						{
-							Log.Debug($"Found room containing {majorItemType}");
-							targetRoom = roomAbstract;
-						}
-					}
-				}
+				var majorItemsFoundInRooms = GetMajorItemsAndRooms();
+				if (majorItemsFoundInRooms.ContainsKey(majorItemType)) { targetRoom = majorItemsFoundInRooms[majorItemType]; }
 
 				if (targetRoom == null)
 				{
@@ -266,17 +256,8 @@ namespace Archipelago.ARobotNamedFight
 				}
 				else
 				{
-					//Find a new, unused major item that isn't blacklisted
-					Array values = Enum.GetValues(typeof(MajorItem));
-					Random random = new Random();
-					MajorItem newItem = (MajorItem)values.GetValue(random.Next(values.Length));
-					Log.Debug($"Attempt to replace item with {newItem}");
-					while (majorItemsFoundInRooms.Contains(newItem) || References.MajorItemIsBlacklisted(newItem))
-					{
-						newItem = (MajorItem)values.GetValue(random.Next(values.Length));
-						Log.Debug($"Nope, try {newItem} instead?");
-					}
-
+					MajorItem newItem = GetUnusedMajorItem(majorItemsFoundInRooms);
+					
 					//Make the swap
 					Log.Debug($"Swapping major item {targetRoom.majorItem} in map with dummy item {newItem}");
 					targetRoom.majorItem = newItem;
@@ -293,18 +274,25 @@ namespace Archipelago.ARobotNamedFight
 						Log.Debug($"And after that, reverse lookup for {newItem} has {allAssignedMajorItemsReverse[newItem]} at index {index}.");
 					}
 
-					Log.Debug($"Swapping item in itemOrder and bonusItemsAdded");
 					try
 					{
+						Log.Debug($"Swapping item in itemOrder");
 						if (activeGame.layout.itemOrder != null && activeGame.layout.itemOrder.Contains(majorItemType))
 						{
 							activeGame.layout.itemOrder.Remove(majorItemType);
 							activeGame.layout.itemOrder.Add(newItem);
 						}
+						Log.Debug($"Swapping item in bonusItemsAdded");
 						if (activeGame.layout.bonusItemsAdded != null && activeGame.layout.bonusItemsAdded.Contains(majorItemType))
 						{
 							activeGame.layout.bonusItemsAdded.Remove(majorItemType);
 							activeGame.layout.bonusItemsAdded.Add(newItem);
+						}
+						Log.Debug($"Swapping item in itemsCollected");
+						if (activeGame.itemsCollected != null && activeGame.itemsCollected.Contains(majorItemType))
+						{
+							activeGame.itemsCollected.Remove(majorItemType);
+							activeGame.itemsCollected.Add(newItem);
 						}
 					}
 					catch (Exception ex) 
@@ -317,6 +305,44 @@ namespace Archipelago.ARobotNamedFight
 			{
 				Log.Debug($"{majorItemType} is blacklisted, so we won't replace it in the map.");
 			}
+		}
+
+		public Dictionary<MajorItem, RoomAbstract> GetMajorItemsAndRooms()
+		{
+			SaveGameData activeGame = SaveGameManager.activeGame;
+			Dictionary<MajorItem, RoomAbstract> majorItemsFoundInRooms = new Dictionary<MajorItem, RoomAbstract>();
+			foreach (var roomAbstract in activeGame.layout.roomAbstracts)
+			{
+				if (!majorItemsFoundInRooms.ContainsKey(roomAbstract.majorItem))
+				{
+					//Gather up the major items that already exist
+					//Log.Debug($"New major item found: {roomAbstract.majorItem}");
+					majorItemsFoundInRooms.Add(roomAbstract.majorItem, roomAbstract);
+				}
+			}
+
+			return majorItemsFoundInRooms;
+		}
+
+		public MajorItem GetUnusedMajorItem(Dictionary<MajorItem, RoomAbstract> majorItemsFoundInRooms = null)
+		{
+			if (majorItemsFoundInRooms == null) 
+			{
+				majorItemsFoundInRooms = GetMajorItemsAndRooms();
+			}
+
+			//Find a new, unused major item that isn't blacklisted
+			Array values = Enum.GetValues(typeof(MajorItem));
+			Random random = new Random();
+			MajorItem itemType = (MajorItem)values.GetValue(random.Next(values.Length));
+			Log.Debug($"Attempt to replace item with {itemType}");
+			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemIsBlacklisted(itemType))
+			{
+				itemType = (MajorItem)values.GetValue(random.Next(values.Length));
+				Log.Debug($"Nope, try {itemType} instead?");
+			}
+
+			return itemType;
 		}
 
 		public void RefreshItemTracker()
@@ -441,30 +467,60 @@ namespace Archipelago.ARobotNamedFight
 						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "BonusExplorb"));
 					}
 
-#if DEBUG
-					if (ArchipelagoClient.Instance.Configuration.GodMode)
-					{
-						Log.Debug("Enqueue GodMode item collection");
-						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-99999, "GodModeInfinijump"));
-					}
-#endif
+//#if DEBUG
+//					if (ArchipelagoClient.Instance.Configuration.GodMode)
+//					{
+//						Log.Debug("Enqueue GodMode item collection");
+//						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-99999, "GodModeInfinijump"));
+//					}
+//#endif
 
 					Log.Debug("Needs new game items");
-					ArchipelagoClient.Instance.EnqueueUncollectedReceivedItems();
-
+					ArchipelagoClient.Instance.HandleAllReceivedItems();
+					ArchipelagoClient.Instance.HandleAllCheckedLocations();
 					Log.Debug("Enqueued");
 				}
 				catch (NullReferenceException ex)
 				{
-					Log.Debug($"NullReferenceException hit in GetNewGameItems...: {ex}");
+					Log.Error($"NullReferenceException hit in GetNewGameItems: {ex}");
 					NeedsNewGameItems = true;
+				}
+			}
+		}
+
+		public void ConsumeLocationExpendQueue()
+		{
+			if (!Player.instance.paused && Player.instance.enabled && LocationExpendQueue.Any())
+			{
+				long itemLocation = LocationExpendQueue.Dequeue();
+				Log.Debug($"ConsumeLocationExpendQueue: location {itemLocation}");
+
+				if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
+				{
+					SaveGameData activeGame = SaveGameManager.activeGame;
+					activeGame.minorItemIdsCollected.Add((int)itemLocation);
+					Automap.instance.RefreshItems();
+				}
+				else
+				{
+					long majorItemId = itemLocation - ItemTracker.Instance.allAssignedMinorItems.Count;
+					if (ItemTracker.Instance.allAssignedMajorItems.ContainsKey(majorItemId))
+					{
+						MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
+						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
+						PlayerManager.instance.ItemCollected(itemType);
+					}
+					else
+					{
+						Log.Debug($"Received location {itemLocation} (modified ID {majorItemId}), which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
+					}
 				}
 			}
 		}
 
 		public void ConsumeReceiptQueue()
 		{
-			if (!Player.instance.paused && Player.instance.enabled&& ReceiptQueue.Any())
+			if (!Player.instance.paused && Player.instance.enabled && ReceiptQueue.Any())
 			{
 				KeyValuePair<long, string> keyValuePair = ReceiptQueue.Dequeue();
 				long key = keyValuePair.Key;
@@ -498,9 +554,15 @@ namespace Archipelago.ARobotNamedFight
 			}
 			else
 			{
-				itemLocation -= References.GetGameModeOffset();
+				long offset = References.GetGameModeOffset();
+				long upperBoundExclusive = References.GetGameModeUpperBoundExclusive();
+				itemLocation -= offset;
 
-			    if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
+				if (itemLocation < 0 || itemLocation > upperBoundExclusive)
+				{
+					Log.Debug($"Game mode {SaveGameManager.activeSlot.activeGameData.gameMode} has offset {offset} and upper bound {upperBoundExclusive}, resulting in an unused item ID: {itemLocation}");
+				}
+				else if (ItemTracker.Instance.allAssignedMinorItems.ContainsKey(itemLocation))
 				{
 					var minorItemType = ItemTracker.Instance.allAssignedMinorItems[itemLocation];
 					Log.Debug($"Minor item {itemLocation} found to be {minorItemType}");
@@ -515,13 +577,15 @@ namespace Archipelago.ARobotNamedFight
 					long majorItemId = itemLocation - ItemTracker.Instance.allAssignedMinorItems.Count;
 					if (ItemTracker.Instance.allAssignedMajorItems.ContainsKey(majorItemId))
 					{
-						MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
-						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
+						//MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
+						var itemType = GetUnusedMajorItem();
+
+						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) determined to be {itemType}");
 						ReceiveMajorItem(itemType);
 					}
 					else
 					{
-						Log.Debug($"Received location {itemLocation} (modified ID {majorItemId}), which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
+						Log.Error($"Received location {itemLocation} (modified ID {majorItemId}), which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
 					}
 				}
 			}

@@ -12,6 +12,18 @@ namespace Archipelago.ARobotNamedFight
 
 		public static bool ExitingGame = false;
 
+		public static Dictionary<GameMode, int> LocationIDOffsetPerGameMode = new Dictionary<GameMode, int>()
+		{
+			{ GameMode.Normal, 0 },
+			{ GameMode.ClassicBossRush, 50 },
+		};
+
+		public static Dictionary<GameMode, int> LocationIDUpperBoundExclusivePerGameMode = new Dictionary<GameMode, int>()
+		{
+			{ GameMode.Normal, 36 },
+			{ GameMode.ClassicBossRush, 61 },
+		};
+
 		public static List<MajorItem> ActivatedItemList { get; private set; } = new List<MajorItem>()
 		{
 			MajorItem.DamageBoostAura,
@@ -119,11 +131,6 @@ namespace Archipelago.ARobotNamedFight
 			}
 		};
 
-		private static Dictionary<GameMode, long> LocationOffsetPerGameMode = new Dictionary<GameMode, long>()
-		{
-			{ GameMode.ClassicBossRush, 50 }
-		};
-
 		public static bool MajorItemIsBlacklisted(MajorItem item)
 		{
 			GameMode mode = SaveGameManager.activeSlot.activeGameData.gameMode;
@@ -142,9 +149,21 @@ namespace Archipelago.ARobotNamedFight
 		{
 			GameMode mode = SaveGameManager.activeSlot.activeGameData.gameMode;
 
-			if (LocationOffsetPerGameMode.ContainsKey(mode))
+			if (LocationIDOffsetPerGameMode.ContainsKey(mode))
 			{
-				return LocationOffsetPerGameMode[mode];
+				return LocationIDOffsetPerGameMode[mode];
+			}
+
+			return 0;
+		}
+
+		public static long GetGameModeUpperBoundExclusive()
+		{
+			GameMode mode = SaveGameManager.activeSlot.activeGameData.gameMode;
+
+			if (LocationIDUpperBoundExclusivePerGameMode.ContainsKey(mode))
+			{
+				return LocationIDUpperBoundExclusivePerGameMode[mode];
 			}
 
 			return 0;
