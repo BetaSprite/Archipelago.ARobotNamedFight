@@ -95,6 +95,8 @@ namespace Archipelago.ARobotNamedFight
 
 		public event ClientDisconnected OnClientDisconnect;
 
+		public ServerSettings SlotServerSettings = new ServerSettings();
+
 		public void Connect(string url, string slot, string pass = null)
 		{
 			if (session != null && session.Socket.Connected)
@@ -103,8 +105,6 @@ namespace Archipelago.ARobotNamedFight
 			}
 
 			Log.Debug($"Connect to Archipelago at {url}.");
-
-			ItemTracker.Instance.RefreshItemTracker();
 
 			session = ArchipelagoSessionFactory.CreateSession(url);
 			LoginResult loginResult;
@@ -136,9 +136,25 @@ namespace Archipelago.ARobotNamedFight
 
 			LoginSuccessful loginSuccessful = (LoginSuccessful)loginResult;
 
+			Log.Debug($"Outputting slot data");
 			foreach (var slotD in loginSuccessful.SlotData)
 			{
 				Log.Debug($"Slot data '{slotD.Key}' is '{slotD.Value}'");
+				switch (slotD.Key)
+				{
+					case "normalIncluded":
+						SlotServerSettings.NormalIncluded = slotD.Value.ToString() == "1";
+						break;
+					case "classicBossRushIncluded":
+						SlotServerSettings.ClassicBossRushIncluded = slotD.Value.ToString() == "1";
+						break;
+					case "startWithExplorb":
+						SlotServerSettings.StartWithExplorb = slotD.Value.ToString() == "1";
+						break;
+					case "deathLink":
+						SlotServerSettings.DeathLink = slotD.Value.ToString() == "1";
+						break;
+				}
 			}
 
 			Log.Debug("Starting DeathLink service");
@@ -175,6 +191,9 @@ namespace Archipelago.ARobotNamedFight
 			};
 
 			Log.Debug("Event hookups completed");
+
+			AchievementHelper.AwardNecessaryAchievements();
+			SecretSeedHelper.AddNecessarySecretSeeds();
 		}
 
 		public string ScoutCheckLocationName(long checkNumber)

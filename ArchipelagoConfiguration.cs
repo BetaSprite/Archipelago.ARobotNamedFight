@@ -12,9 +12,6 @@ namespace Archipelago.ARobotNamedFight
 {
 	public class ArchipelagoConfiguration
 	{
-		//public bool SendMinorItemDropsAsChecks = false;
-		public bool StartWithExplorb = true;
-
 #if DEBUG
 		public bool GodMode = true;
 #endif

@@ -16,10 +16,6 @@ namespace Archipelago.ARobotNamedFight.Patching
 			{
 				ItemTracker.Instance.Reset();
 				ItemTracker.Instance.StartingNewGame();
-
-				ArchipelagoClient.Instance.Connect(ArchipelagoClient.Instance.Configuration.url,
-													ArchipelagoClient.Instance.Configuration.slot,
-													ArchipelagoClient.Instance.Configuration.pass);
 			}
 			catch (Exception ex)
 			{
@@ -36,12 +32,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 			try
 			{
 				Log.Debug("In GameStartState_Continue_Patch.Postfix");
-
 				ItemTracker.Instance.Reset();
-
-				ArchipelagoClient.Instance.Connect(ArchipelagoClient.Instance.Configuration.url,
-													ArchipelagoClient.Instance.Configuration.slot,
-													ArchipelagoClient.Instance.Configuration.pass);
 			}
 			catch (Exception ex)
 			{

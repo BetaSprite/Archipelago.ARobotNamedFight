@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Archipelago.ARobotNamedFight
 {
@@ -40,6 +41,8 @@ namespace Archipelago.ARobotNamedFight
 		public Dictionary<long, MajorItem> allAssignedMajorItems { get; private set; } = new Dictionary<long, MajorItem>();
 
 		public Dictionary<MajorItem, long> allAssignedMajorItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
+
+		public List<MajorItemInfo> availableNonTraversalItems { get; private set; } = new List<MajorItemInfo>();
 
 		public Queue<KeyValuePair<long, string>> ReceiptQueue { get; private set; } = new Queue<KeyValuePair<long, string>>();
 
@@ -332,13 +335,12 @@ namespace Archipelago.ARobotNamedFight
 			}
 
 			//Find a new, unused major item that isn't blacklisted
-			Array values = Enum.GetValues(typeof(MajorItem));
-			Random random = new Random();
-			MajorItem itemType = (MajorItem)values.GetValue(random.Next(values.Length));
+			System.Random random = new System.Random();
+			MajorItem itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 			Log.Debug($"Attempt to replace item with {itemType}");
-			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemIsBlacklisted(itemType))
+			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemIsBlacklisted(itemType) || Player.instance.itemsPossessed.Contains(itemType))
 			{
-				itemType = (MajorItem)values.GetValue(random.Next(values.Length));
+				itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 				Log.Debug($"Nope, try {itemType} instead?");
 			}
 
@@ -446,6 +448,17 @@ namespace Archipelago.ARobotNamedFight
 
 					//Mod all item counts to get it back to how it was before.
 					//ItemTracker.Instance.ModAllItemsCollected();
+
+					List<MajorItemInfo> loadedItemInfos = new List<MajorItemInfo>();
+					loadedItemInfos.AddRange(Resources.LoadAll<MajorItemInfo>("MajorItemInfos/OtherItems"));
+					var achievements = SaveGameManager.activeSlot.achievements;
+					foreach (var item in loadedItemInfos)
+					{
+						if (item.nontraversalPool && (item.requiredAchievement == AchievementID.None || achievements.Contains(item.requiredAchievement)))
+						{
+							availableNonTraversalItems.Add(item);
+						}
+					}
 				}
 				catch (Exception ex)
 				{
@@ -461,7 +474,7 @@ namespace Archipelago.ARobotNamedFight
 				NeedsNewGameItems = false;
 				try
 				{
-					if (ArchipelagoClient.Instance.Configuration.StartWithExplorb)
+					if (ArchipelagoClient.Instance.SlotServerSettings.StartWithExplorb)
 					{
 						Log.Debug("Enqueue bonus Explorb collection");
 						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "BonusExplorb"));
@@ -579,13 +592,15 @@ namespace Archipelago.ARobotNamedFight
 					{
 						//MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
 						var itemType = GetUnusedMajorItem();
-
-						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) determined to be {itemType}");
+						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) randomized to be {itemType}");
 						ReceiveMajorItem(itemType);
 					}
 					else
 					{
 						Log.Error($"Received location {itemLocation} (modified ID {majorItemId}), which is not in the items collection: {ItemTracker.Instance.allAssignedMinorItems.Count} minors and {ItemTracker.Instance.allAssignedMajorItems.Count} majors.");
+						var itemType = GetUnusedMajorItem();
+						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) randomized to be {itemType}");
+						ReceiveMajorItem(itemType);
 					}
 				}
 			}

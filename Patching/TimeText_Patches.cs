@@ -19,25 +19,32 @@ namespace Archipelago.ARobotNamedFight.Patching
 		static Color _startingColor = new Color(1f, 1f, 1f);
 		static Color _sentColor = new Color(.7f, .2f, .2f);
 		static Color _receivedColor = new Color(.2f, .7f, .2f);
-		//static bool _resized = false;
+		static bool _resized = false;
 
 		static void Postfix(ref Text ____timeText)
 		{
-			//TODO:  See if I can make the timer cover more space.  Maybe get the RectTransform from the gameobject?
-			//if (!_resized)
-			//{
-			//	_resized = true;
-			//}
-
 			if (____timeText == null)
 			{
 				Log.Error("No ____timeText found in TimeText_Update_Patch.Update. =/");
 			}
 
+			//TODO:  See if I can make the timer cover more space.  Maybe get the RectTransform from the gameobject?
+			if (!_resized)
+			{
+				_resized = true;
+
+				var rectT = ____timeText.GetComponent<RectTransform>();
+				Log.Debug($"rectT.rect.width = {rectT.rect.width}; rectT.rect.height = {rectT.rect.height}; rectT.sizeDelta.x = {rectT.sizeDelta.x}; rectT.sizeDelta.y = {rectT.sizeDelta.y}; x = {rectT.rect.position.x}");
+				rectT.sizeDelta = new Vector2(200, rectT.sizeDelta.y);
+				Log.Debug($"rectT.rect.width = {rectT.rect.width}; rectT.rect.height = {rectT.rect.height}; rectT.sizeDelta.x = {rectT.sizeDelta.x}; rectT.sizeDelta.y = {rectT.sizeDelta.y}; x = {rectT.rect.position.x}");
+			}
+
+			ItemTracker.Instance.ConsumeLocationExpendQueue();
+			ItemTracker.Instance.ConsumeReceiptQueue();
+
 			//Each second, as long as we're not picking up an item already, consume items from the receipt queue
 			if (_lastTimeText != ____timeText.text && !ItemTracker.Instance.InShrineOrShopCollection && !ItemTracker.Instance.SkipSendCheck())
 			{
-				ItemTracker.Instance.ConsumeReceiptQueue();
 				_lastTimeText = ____timeText.text;
 
 				if (_currentOverrideTimestamp != DateTime.MinValue && _currentOverrideTimestamp.AddSeconds(4) < DateTime.Now)

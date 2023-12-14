@@ -14,7 +14,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 		{
 			if (!References.ExitingGame && saveLayout && forceSave)
 			{
-				Log.Debug("Not sure why we're resetting the Item Tracker in SaveGameManager.Save, but here we are...?");
+				Log.Debug("Resetting item tracker after layout has been generated");
 				ItemTracker.Instance.Reset();
 			}
 		}
