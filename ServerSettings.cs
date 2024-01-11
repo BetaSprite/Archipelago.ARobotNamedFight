@@ -14,8 +14,15 @@ namespace Archipelago.ARobotNamedFight
 		public bool MirrorWorldIncluded { get; set; }
 		public bool MegaMapIncluded { get; set; }
 		public bool ExterminatorIncluded { get; set; }
-		public bool NewBossRushIncluded { get; set; }
+		public GrantAchievementsMode GrantAchievements { get; set; }
 		public bool StartWithExplorb { get; set; }
 		public bool DeathLink {  get; set; }
+	}
+
+	public enum GrantAchievementsMode
+	{
+		None = 0,
+		Necessary = 1,
+		All = 2,
 	}
 }

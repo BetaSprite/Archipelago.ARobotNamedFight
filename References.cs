@@ -16,12 +16,14 @@ namespace Archipelago.ARobotNamedFight
 		{
 			{ GameMode.Normal, 0 },
 			{ GameMode.ClassicBossRush, 50 },
+			{ GameMode.Exterminator, 100 },
 		};
 
 		public static Dictionary<GameMode, int> LocationIDUpperBoundExclusivePerGameMode = new Dictionary<GameMode, int>()
 		{
 			{ GameMode.Normal, 36 },
-			{ GameMode.ClassicBossRush, 61 },
+			{ GameMode.ClassicBossRush, 63 },
+			{ GameMode.Exterminator, 147 },
 		};
 
 		public static List<MajorItem> ActivatedItemList { get; private set; } = new List<MajorItem>()

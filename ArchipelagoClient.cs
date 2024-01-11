@@ -148,6 +148,15 @@ namespace Archipelago.ARobotNamedFight
 					case "classicBossRushIncluded":
 						SlotServerSettings.ClassicBossRushIncluded = slotD.Value.ToString() == "1";
 						break;
+					case "megaMapIncluded":
+						SlotServerSettings.MegaMapIncluded = slotD.Value.ToString() == "1";
+						break;
+					case "exterminatorIncluded":
+						SlotServerSettings.ExterminatorIncluded = slotD.Value.ToString() == "1";
+						break;
+					case "grantAchievementsMode":
+						SlotServerSettings.GrantAchievements = (GrantAchievementsMode)((int)slotD.Value);
+						break;
 					case "startWithExplorb":
 						SlotServerSettings.StartWithExplorb = slotD.Value.ToString() == "1";
 						break;
@@ -192,7 +201,14 @@ namespace Archipelago.ARobotNamedFight
 
 			Log.Debug("Event hookups completed");
 
-			AchievementHelper.AwardNecessaryAchievements();
+			if (ArchipelagoClient.Instance.SlotServerSettings.GrantAchievements == GrantAchievementsMode.Necessary)
+			{
+				AchievementHelper.AwardNecessaryAchievements();
+			}
+			else if (ArchipelagoClient.Instance.SlotServerSettings.GrantAchievements == GrantAchievementsMode.All)
+			{
+				AchievementHelper.AwardAllAchievements();
+			}
 			SecretSeedHelper.AddNecessarySecretSeeds();
 		}
 

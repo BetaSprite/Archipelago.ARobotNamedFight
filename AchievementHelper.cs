@@ -14,21 +14,8 @@ namespace Archipelago.ARobotNamedFight
 
 			var activeSlot = SaveGameManager.activeSlot;
 
-			//Infinite loop on layout gen
-			if (ArchipelagoClient.Instance.SlotServerSettings.NewBossRushIncluded)
-			{
-				Log.Debug("Giving achievements for all bosses and Boss Rush unlock");
-				var allBossNames = Enum.GetValues(typeof(BossName)).Cast<BossName>().ToList();
-				foreach (BossName bossName in allBossNames)
-				{
-					var achievement = AchievementManager.instance.GetBossAchievement(bossName);
-					GiveAchievement(achievement);
-				}
-				GiveAchievement(AchievementID.BossRush);
-			}
-
 			//Seems OK, needs testing
-			if (true || ArchipelagoClient.Instance.SlotServerSettings.ExterminatorIncluded)
+			if (ArchipelagoClient.Instance.SlotServerSettings.ExterminatorIncluded)
 			{
 				GiveAchievement(AchievementID.Exterminator);
 			}
@@ -36,7 +23,6 @@ namespace Archipelago.ARobotNamedFight
 			//Error on layout gen
 			if (ArchipelagoClient.Instance.SlotServerSettings.MegaMapIncluded)
 			{
-
 				GiveAchievement(AchievementID.MegaMap);
 			}
 		}
