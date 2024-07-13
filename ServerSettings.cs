@@ -8,14 +8,10 @@ namespace Archipelago.ARobotNamedFight
 {
 	public class ServerSettings
 	{
-		public bool NormalIncluded { get; set; }
-		public bool ClassicBossRushIncluded { get; set; }
-		public bool SpookyIncluded { get; set; }
-		public bool MirrorWorldIncluded { get; set; }
-		public bool MegaMapIncluded { get; set; }
-		public bool ExterminatorIncluded { get; set; }
+		public GameMode GameMode { get; set; }
 		public GrantAchievementsMode GrantAchievements { get; set; }
 		public bool StartWithExplorb { get; set; }
+		public bool StartWithWallJump { get; set; }
 		public bool DeathLink {  get; set; }
 	}
 

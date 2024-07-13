@@ -15,13 +15,13 @@ namespace Archipelago.ARobotNamedFight
 			var activeSlot = SaveGameManager.activeSlot;
 
 			//Seems OK, needs testing
-			if (ArchipelagoClient.Instance.SlotServerSettings.ExterminatorIncluded)
+			if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.Exterminator)
 			{
 				GiveAchievement(AchievementID.Exterminator);
 			}
 
 			//Error on layout gen
-			if (ArchipelagoClient.Instance.SlotServerSettings.MegaMapIncluded)
+			if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.MegaMap)
 			{
 				GiveAchievement(AchievementID.MegaMap);
 			}

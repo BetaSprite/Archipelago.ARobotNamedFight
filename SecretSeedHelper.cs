@@ -11,16 +11,16 @@ namespace Archipelago.ARobotNamedFight
 	{
 		public static void AddNecessarySecretSeeds()
 		{
-			Log.Debug($"Adding necessary secret seeds: {ArchipelagoClient.Instance.SlotServerSettings.MirrorWorldIncluded} {ArchipelagoClient.Instance.SlotServerSettings.SpookyIncluded} {ArchipelagoClient.Instance.SlotServerSettings.ClassicBossRushIncluded}");
+			Log.Debug($"Adding necessary secret seeds.");
 			if (SaveGameManager.activeSlot != null)
 			{
-				if (ArchipelagoClient.Instance.SlotServerSettings.MirrorWorldIncluded)
+				if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.MirrorWorld)
 					SaveGameManager.activeSlot.AddSeedToSecretSeeds(SeedHelper.MirrorWorld);
 
-				if (ArchipelagoClient.Instance.SlotServerSettings.SpookyIncluded)
+				if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.Spooky)
 					SaveGameManager.activeSlot.AddSeedToSecretSeeds(SeedHelper.Spooky);
 
-				if (ArchipelagoClient.Instance.SlotServerSettings.ClassicBossRushIncluded)
+				if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.ClassicBossRush)
 					SaveGameManager.activeSlot.AddSeedToSecretSeeds(SeedHelper.ClassicBossRush);
 			}
 		}

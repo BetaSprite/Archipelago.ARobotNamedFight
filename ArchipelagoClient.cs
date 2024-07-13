@@ -142,23 +142,17 @@ namespace Archipelago.ARobotNamedFight
 				Log.Debug($"Slot data '{slotD.Key}' is '{slotD.Value}'");
 				switch (slotD.Key)
 				{
-					case "normalIncluded":
-						SlotServerSettings.NormalIncluded = slotD.Value.ToString() == "1";
-						break;
-					case "classicBossRushIncluded":
-						SlotServerSettings.ClassicBossRushIncluded = slotD.Value.ToString() == "1";
-						break;
-					case "megaMapIncluded":
-						SlotServerSettings.MegaMapIncluded = slotD.Value.ToString() == "1";
-						break;
-					case "exterminatorIncluded":
-						SlotServerSettings.ExterminatorIncluded = slotD.Value.ToString() == "1";
+					case "gameMode":
+						SlotServerSettings.GameMode = (GameMode)(int.Parse(slotD.Value.ToString()));
 						break;
 					case "grantAchievementsMode":
-						SlotServerSettings.GrantAchievements = (GrantAchievementsMode)((int)slotD.Value);
+						SlotServerSettings.GrantAchievements = (GrantAchievementsMode)(int.Parse(slotD.Value.ToString()));
 						break;
 					case "startWithExplorb":
 						SlotServerSettings.StartWithExplorb = slotD.Value.ToString() == "1";
+						break;
+					case "startWithWallJump":
+						SlotServerSettings.StartWithWallJump = slotD.Value.ToString() == "1";
 						break;
 					case "deathLink":
 						SlotServerSettings.DeathLink = slotD.Value.ToString() == "1";
@@ -201,6 +195,11 @@ namespace Archipelago.ARobotNamedFight
 
 			Log.Debug("Event hookups completed");
 
+			if (ArchipelagoClient.Instance.SlotServerSettings.StartWithWallJump)
+			{
+				AchievementHelper.GiveAchievement(AchievementID.WallJump);
+			}
+
 			if (ArchipelagoClient.Instance.SlotServerSettings.GrantAchievements == GrantAchievementsMode.Necessary)
 			{
 				AchievementHelper.AwardNecessaryAchievements();
@@ -209,6 +208,7 @@ namespace Archipelago.ARobotNamedFight
 			{
 				AchievementHelper.AwardAllAchievements();
 			}
+
 			SecretSeedHelper.AddNecessarySecretSeeds();
 		}
 
@@ -251,8 +251,6 @@ namespace Archipelago.ARobotNamedFight
 				Log.Debug($"In SendCheck for {localCheckPosition} / {finalCheckPosition}, name {locationName}");
 				NotificationManager.Instance.NotificationQueue.Enqueue($"S:{locationName}");
 				session.Locations.CompleteLocationChecks(finalCheckPosition);
-				//ItemTracker.Instance.NextCheckNumber = ItemTracker.Instance.NextCheckNumber + 1;
-				//session.DataStorage["NextCheckNumber"] = ItemTracker.Instance.NextCheckNumber;
 			}
 			catch (Exception ex)
 			{
@@ -263,34 +261,11 @@ namespace Archipelago.ARobotNamedFight
 		public void RunCompleted(GameMode gameMode)
 		{
 			Log.Debug($"In RunCompleted for game mode {gameMode}");
-			List<GameMode> handledGameModes = new List<GameMode>() { GameMode.Normal, GameMode.ClassicBossRush };
-			if (handledGameModes.Contains(gameMode))
+			if (References.LocationIDOffsetPerGameMode.ContainsKey(gameMode) && ArchipelagoClient.Instance.SlotServerSettings.GameMode == gameMode)
 			{
-				if (ItemTracker.Instance.TotalLocationsInCurrentGame < ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode))
-				{
-					int totalDifference = ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode) - ItemTracker.Instance.TotalLocationsInCurrentGame;
-					for (int i=0; i < totalDifference; i++)
-					{
-						ArchipelagoClient.Instance.SendCheck(ItemTracker.Instance.TotalLocationsInCurrentGame + i);
-					}
-				}
-
-				//string dataStorageKey = $"{gameMode}RunsCompletedCount";
-	//			Log.Debug($"dataStorageKey = {dataStorageKey}");
-				//string runsCompletedDataStorage = TryGetDataStorage(dataStorageKey);
-
-				//Log.Debug($"runsCompletedDataStorage = {runsCompletedDataStorage}");
-				//int runsCompleted = 0;
-				//if (!string.IsNullOrEmpty(runsCompletedDataStorage))
-				//{
-				//	int.TryParse(runsCompletedDataStorage, out runsCompleted);
-				//}
-				//runsCompleted++;
-
-				//Log.Debug($"New runsCompleted value = {runsCompleted}");
-				//SetDataStorage(dataStorageKey, runsCompleted.ToString());
-				
-	//			Log.Debug("All done");
+				StatusUpdatePacket packet = new StatusUpdatePacket();
+				packet.Status = ArchipelagoClientState.ClientGoal;
+				session.Socket.SendPacket(packet);
 			}
 		}
 
