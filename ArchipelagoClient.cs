@@ -216,18 +216,7 @@ namespace Archipelago.ARobotNamedFight
 		{
 			try
 			{
-				//long nextCheck = ItemTracker.Instance.NextCheckNumber;
-				//var locationInfo = session?.Locations?.ScoutLocationsAsync(nextCheck).Result;
 				string locationName = session.Locations.GetLocationNameFromId(checkNumber + LocationsStartID);
-
-				//Log.Debug($"Next scout location from {nextCheck} count: {locationInfo.Locations.Length}");
-
-				//foreach (var location in locationInfo.Locations)
-				//{
-				//	Log.Debug($"Scouting found item #{location.Item} for {location.Player} at {location.Location} with flags {location.Flags}.");
-				//}
-
-				//return locationInfo;
 
 				return locationName;
 			}
@@ -263,6 +252,23 @@ namespace Archipelago.ARobotNamedFight
 			Log.Debug($"In RunCompleted for game mode {gameMode}");
 			if (References.LocationIDOffsetPerGameMode.ContainsKey(gameMode) && ArchipelagoClient.Instance.SlotServerSettings.GameMode == gameMode)
 			{
+				int startReleaseInclusive = -1;
+				int endReleaseExclusive = -1;
+				
+				if (ItemTracker.Instance.TotalLocationsInCurrentGame < ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode))
+				{
+					int totalDifference = ItemTracker.Instance.TotalLocationsExpectedForGameMode(gameMode) - ItemTracker.Instance.TotalLocationsInCurrentGame;
+					startReleaseInclusive += totalDifference;
+				}
+
+				if (startReleaseInclusive != -1 && endReleaseExclusive != -1)
+				{
+					for (int i = startReleaseInclusive; i < endReleaseExclusive; i++)
+					{
+						ArchipelagoClient.Instance.SendCheck(i);
+					}
+				}
+
 				StatusUpdatePacket packet = new StatusUpdatePacket();
 				packet.Status = ArchipelagoClientState.ClientGoal;
 				session.Socket.SendPacket(packet);
