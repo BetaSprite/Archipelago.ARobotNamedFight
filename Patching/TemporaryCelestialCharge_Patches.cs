@@ -14,10 +14,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 		static void Postfix()
 		{
 #if DEBUG
-			if (ArchipelagoClient.Instance.Configuration.GodMode)
-			{
-				MusicController.instance.SetPitch(1);
-			}
+			MusicController.instance.SetPitch(1);
 #endif
 		}
 	}

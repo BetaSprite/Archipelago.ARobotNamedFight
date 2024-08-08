@@ -22,7 +22,13 @@ namespace Archipelago.ARobotNamedFight
 
 		public bool NeedsNewGameItems { get; set; } = false;
 
-		//public long NextCheckNumber = 1;
+		public long NextCheckNumber
+		{
+			get
+			{
+				return ArchipelagoClient.Instance.GetNextCheckNumberFromSession();
+			}
+		}
 
 		private int PickingUpSkipCheck = 0;
 
@@ -42,6 +48,10 @@ namespace Archipelago.ARobotNamedFight
 
 		public Dictionary<MajorItem, long> allAssignedMajorItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
 
+		public Dictionary<long, MajorItem> traversalItems { get; private set; } = new Dictionary<long, MajorItem>();
+
+		public Dictionary<MajorItem, long> traversalItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
+
 		public List<MajorItemInfo> availableNonTraversalItems { get; private set; } = new List<MajorItemInfo>();
 
 		public Queue<KeyValuePair<long, string>> ReceiptQueue { get; private set; } = new Queue<KeyValuePair<long, string>>();
@@ -50,14 +60,14 @@ namespace Archipelago.ARobotNamedFight
 
 		Dictionary<GameMode, int> ExpectedLocationCountPerGameMode = new Dictionary<GameMode, int>()
 		{
+			//32 minor, 4 major, 7 traversal, 4 glitch
 			{ GameMode.Normal, 36 },
 			{ GameMode.ClassicBossRush, 13 },
 		};
 
-
 		public void Reset()
 		{
-			//ItemTracker.Instance.NextCheckNumber = 1;
+			//ItemTracker.Instance.NextCheckNumber = 0;
 			LastPickedMinorItemGlobal = -99;
 			//MinorItemsCollected.Clear();
 			allAssignedMinorItems.Clear();
@@ -78,7 +88,7 @@ namespace Archipelago.ARobotNamedFight
 		{
 			get
 			{
-				return allAssignedMinorItems.Count + allAssignedMajorItems.Count;
+				return allAssignedMinorItems.Count + allAssignedMajorItems.Count + traversalItems.Count;
 			}
 		}
 
@@ -89,126 +99,6 @@ namespace Archipelago.ARobotNamedFight
 			return 0;
 		}
 
-		//public void ItemCollected(MinorItemType minorItemType, bool loading = false)
-		//{
-		//	Log.Debug($"In ItemCollected for {minorItemType}");
-		//	RefreshItemTracker();
-
-		//	lock (CheckIgnores)
-		//	{
-		//		if (CheckIgnores.ContainsKey(minorItemType) && CheckIgnores[minorItemType] > 0)
-		//		{
-		//			CheckIgnores[minorItemType]--;
-		//			Log.Debug($"Ignored collection of spontaneous item {minorItemType}");
-		//		}
-		//		else
-		//		{
-		//			if (!MinorItemsCollected.ContainsKey(minorItemType))
-		//			{
-		//				MinorItemsCollected.Add(minorItemType, 0);
-		//			}
-
-		//			MinorItemsCollected[minorItemType]++;
-
-		//			Log.Debug($"{MinorItemsCollected[minorItemType]} collected towards goal of {ArchipelagoClient.Instance.Configuration.MinorItemSkipCount+1} for item type {minorItemType}");
-		//		}
-		//	}
-		//}
-
-		//public void FinishCheck(MinorItemType minorItemType)
-		//{
-		//	Log.Debug("In FinishCheck");
-		//	RefreshItemTracker();
-		//	if (MinorItemsCollected.ContainsKey(minorItemType))
-		//	{
-		//		ModItem(minorItemType);
-		//	}
-		//	else
-		//	{
-		//		Log.Warning($"FinishCheck was called for {minorItemType}, but collection did not contain that type.");
-		//	}
-		//}
-
-		//public void ModAllItemsCollected()
-		//{
-		//	Log.Debug("In ModAllItemsCollected");
-		//	RefreshItemTracker();
-		//	var keys = new List<MinorItemType>(MinorItemsCollected.Keys.ToArray());
-		//	foreach (var key in keys)
-		//	{
-		//		ModItem(key);
-		//	}
-		//}
-
-		//	 public void ModItem(MinorItemType minorItemType)
-		//	 {
-		//		 if (!MinorItemsCollected.ContainsKey(minorItemType))
-		//{
-		//			 MinorItemsCollected.Add(minorItemType, 0);
-		//		 }
-		//		 Log.Debug($"For {minorItemType}, modding {MinorItemsCollected[minorItemType]} to {MinorItemsCollected[minorItemType] % (ArchipelagoClient.Instance.Configuration.MinorItemSkipCount + 1)}.");
-		//		 MinorItemsCollected[minorItemType] = MinorItemsCollected[minorItemType] % (ArchipelagoClient.Instance.Configuration.MinorItemSkipCount + 1);
-		//		 Log.Debug($"ItemsCollected[{minorItemType}] = {MinorItemsCollected[minorItemType]}");
-		//	 }
-
-		//	 public bool ItemIsAtCheck(MinorItemType minorItemType, bool decrementForce = false)
-		//	 {
-		//		 Log.Debug($"In ItemIsAtCheck for {minorItemType}");
-		//		 RefreshItemTracker();
-
-		////if (CheckIsBeingForced(minorItemType))
-		////{
-		////	Log.Debug($"Check is being forced for {minorItemType} {CheckForces[minorItemType]} times.  Decrement? {decrementForce}");
-
-		////	if (decrementForce)
-		////	{
-		////		CheckForces[minorItemType] = CheckForces[minorItemType] - 1;
-		////	}
-
-		////	return true;
-		////}
-
-		//		 if (ItemTracker.Instance.SkipSendCheck())
-		//{
-		//			 return false;
-		//}
-
-		//if (References.MinorItemBlacklist.Contains(minorItemType))
-		//{
-		//	return false;
-		//}
-
-		//		 //if (!MinorItemsCollected.ContainsKey(minorItemType))
-		//		 //{
-		//		 //	MinorItemsCollected.Add(minorItemType, 0);
-		//		 //}
-
-		//		 return true; // (MinorItemsCollected[minorItemType] > ArchipelagoClient.Instance.Configuration.MinorItemSkipCount);
-		//	 }
-
-		//public bool CheckIsBeingForced(MinorItemType minorItemType)
-		//{
-		//	Log.Debug($"In CheckIsBeingForced for {minorItemType}");
-		//	RefreshItemTracker();
-		//	return (CheckForces.ContainsKey(minorItemType) && CheckForces[minorItemType] > 0);
-		//}
-
-		//public bool CheckIsBeingIgnored(MinorItemType minorItemType)
-		//{
-		//	Log.Debug($"In CheckIsBeingIgnored for {minorItemType}");
-		//	RefreshItemTracker();
-		//	return (CheckIgnores.ContainsKey(minorItemType) && CheckIgnores[minorItemType] > 0);
-		//}
-
-		//public string GetRemainingChecksMessage(MinorItemType minorItemType)
-		//{
-		//	Log.Debug($"In GetRemainingChecksMessage for {minorItemType}");
-		//	RefreshItemTracker();
-		//	int remaining = (ArchipelagoClient.Instance.Configuration.MinorItemSkipCount + 1) - MinorItemsCollected[minorItemType];
-		//	string s = remaining == 1 ? "" : "s";
-		//	return $"Collect {remaining} more {minorItemType}{s} to send an item to another player.";
-		//}
-
 		public void AddSkipCheck(int amt = 1)
 		{
 			PickingUpSkipCheck += amt;
@@ -217,9 +107,13 @@ namespace Archipelago.ARobotNamedFight
 
 		public bool SkipSendCheck(bool consume = false)
 		{
-			//Log.Debug($"SkipSendCheck. consume = {consume}. PickingUpSkipCheck = {PickingUpSkipCheck}. InShrineOrShopCollection = {InShrineOrShopCollection}.");
+			Log.Debug($"SkipSendCheck. consume = {consume}. PickingUpSkipCheck = {PickingUpSkipCheck}. InShrineOrShopCollection = {InShrineOrShopCollection}.");
 			bool bRet = false;
-			if (InShrineOrShopCollection) bRet = true;
+			if (InShrineOrShopCollection)
+			{
+				bRet = true;
+				if (consume) ItemTracker.Instance.InShrineOrShopCollection = false;
+			}
 			if (!bRet)
 			{
 				bRet = PickingUpSkipCheck > 0;
@@ -245,7 +139,7 @@ namespace Archipelago.ARobotNamedFight
 		public void ReplaceMajorItemInRooms(MajorItem majorItemType)
 		{
 			Log.Debug($"In ReplaceMajorItemInRooms for {majorItemType}");
-			if (!References.MajorItemIsBlacklisted(majorItemType))
+			if (!References.MajorItemNeedsSpecialHandling(majorItemType))
 			{
 				SaveGameData activeGame = SaveGameManager.activeGame;
 				RoomAbstract targetRoom = null;
@@ -338,7 +232,7 @@ namespace Archipelago.ARobotNamedFight
 			System.Random random = new System.Random();
 			MajorItem itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 			Log.Debug($"Attempt to replace item with {itemType}");
-			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemIsBlacklisted(itemType) || Player.instance.itemsPossessed.Contains(itemType))
+			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemNeedsSpecialHandling(itemType) || Player.instance.itemsPossessed.Contains(itemType))
 			{
 				itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 				Log.Debug($"Nope, try {itemType} instead?");
@@ -356,44 +250,23 @@ namespace Archipelago.ARobotNamedFight
 				{
 					Log.Debug("RefreshItemTracker has been triggered");
 
-					//NextCheckNumber = ArchipelagoClient.Instance.GetNextCheckNumber();
-
-					//Log.Debug($"GetNextCheckNumber returned {NextCheckNumber}");
-
-					//RoomAbstracts have the actual in-game items' objects.
-					//activeGame.minorItemIdsCollected can check if the item has been picked up via global ID.
-					//Loop through and identify what's been picked up so that we can pick up where the player left off.
-					//TODO: Replace this with some kind of history retrieval from Archipelago.
-
 					SaveGameData activeGame = SaveGameManager.activeGame;
-					
-					//Dictionary<int, MinorItemType> visitedRoomMinorItems = new Dictionary<int, MinorItemType>();
-
-					//Log.Debug($"Loop through the rooms that have been visited. Count: {activeGame.roomsVisited.Count}");
-					//foreach (var roomID in activeGame.roomsVisited)
-					//{
-					//	List<RoomAbstract> roomAbstractsVisited = new List<RoomAbstract>(activeGame.layout.roomAbstracts.Where(x => x.roomID == roomID));
-					//	Log.Debug($"Locating rooms for roomID {roomID}. Count: {roomAbstractsVisited.Count}");
-					//	foreach (var roomAbstract in roomAbstractsVisited)
-					//	{
-					//		Log.Debug($"Loop through this room's items to catalog their types and IDs. Count: {roomAbstract.minorItems.Count}");
-					//		foreach (var item in roomAbstract.minorItems)
-					//		{
-					//			Log.Debug($"Item {item.type} found with global ID {item.globalID}");
-					//			if (!References.MinorItemBlacklist.Contains(item.type))
-					//			{
-					//				visitedRoomMinorItems.Add(item.globalID, item.type);
-					//			}
-					//			else
-					//			{
-					//				Log.Debug($"Item type {item.type} is banned from checks. Ignoring.");
-					//			}
-					//		}
-					//	}
-					//}
 
 					Log.Debug($"Loop through all rooms. Count: {activeGame.layout.roomAbstracts.Count}");
-					int iMajorItemCounter = 0;
+					int iRegularMajorItemCounter = 0;
+					int iTraversalMajorItemCount = 0;
+
+					foreach (var majorItem in activeGame.layout.itemOrder)
+					{
+						if (References.MajorItemIsTraversal(majorItem))
+						{
+							Log.Debug($"Adding traversal major item {majorItem} to list with ID {iTraversalMajorItemCount}.");
+							traversalItems.Add(iTraversalMajorItemCount, majorItem);
+							traversalItemsReverse.Add(majorItem, iTraversalMajorItemCount);
+							iTraversalMajorItemCount++;
+						}
+					}
+
 					foreach (var roomAbstract in activeGame.layout.roomAbstracts)
 					{
 						//Log.Debug($"Loop through this room's minor items to catalog their types and IDs. Count: {roomAbstract.minorItems.Count}");
@@ -405,12 +278,12 @@ namespace Archipelago.ARobotNamedFight
 							allAssignedMinorItems.Add(item.globalID, item.type);
 						}
 
-						if (!References.MajorItemIsBlacklisted(roomAbstract.majorItem))
+						if (!References.MajorItemNeedsSpecialHandling(roomAbstract.majorItem))
 						{
-							Log.Debug($"Adding major item {roomAbstract.majorItem} to list with ID {iMajorItemCounter}.");
-							allAssignedMajorItems.Add(iMajorItemCounter, roomAbstract.majorItem);
-							allAssignedMajorItemsReverse.Add(roomAbstract.majorItem, iMajorItemCounter);
-							iMajorItemCounter++;
+							Log.Debug($"Adding major item {roomAbstract.majorItem} to list with ID {iRegularMajorItemCounter}.");
+							allAssignedMajorItems.Add(iRegularMajorItemCounter, roomAbstract.majorItem);
+							allAssignedMajorItemsReverse.Add(roomAbstract.majorItem, iRegularMajorItemCounter);
+							iRegularMajorItemCounter++;
 						}
 						else if (roomAbstract.majorItem != MajorItem.None)
 						{
@@ -420,34 +293,6 @@ namespace Archipelago.ARobotNamedFight
 
 					Log.Debug($"Total minor items: {allAssignedMinorItems.Count}");
 					Log.Debug($"Total non-progress major items: {allAssignedMajorItems.Count}");
-
-					//Log.Debug($"Total visited minor items found: {visitedRoomMinorItems.Count}");
-
-					//int minorCollectedCount = 0;
-					////For every item that has been collected, add up their totals in the tracker.
-					//foreach (var collectedId in activeGame.minorItemIdsCollected)
-					//{
-					//	if (visitedRoomMinorItems.ContainsKey(collectedId))
-					//	{
-					//		ItemTracker.Instance.ItemCollected(visitedRoomMinorItems[collectedId], true);
-					//		minorCollectedCount++;
-					//	}
-					//}
-
-					//Log.Debug($"Total minor items collected count: {minorCollectedCount}");
-
-					//int majorCollectedCount = 0;
-					//foreach (var collectedId in activeGame.itemsCollected)
-					//{
-					//	majorCollectedCount++;
-					//}
-
-					//Log.Debug($"Total major items collected count: {majorCollectedCount}");
-
-					//Log.Debug($"Total collected count: {minorCollectedCount + majorCollectedCount}");
-
-					//Mod all item counts to get it back to how it was before.
-					//ItemTracker.Instance.ModAllItemsCollected();
 
 					List<MajorItemInfo> loadedItemInfos = new List<MajorItemInfo>();
 					loadedItemInfos.AddRange(Resources.LoadAll<MajorItemInfo>("MajorItemInfos/OtherItems"));
@@ -476,21 +321,28 @@ namespace Archipelago.ARobotNamedFight
 				{
 					if (ArchipelagoClient.Instance.SlotServerSettings.StartWithExplorb)
 					{
-						Log.Debug("Enqueue bonus Explorb collection");
-						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "BonusExplorb"));
+						Log.Debug("Enqueue bonus Explorb");
+						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "Explorb"));
 					}
 
-//#if DEBUG
-//					if (ArchipelagoClient.Instance.Configuration.GodMode)
-//					{
-//						Log.Debug("Enqueue GodMode item collection");
-//						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-99999, "GodModeInfinijump"));
-//					}
-//#endif
+					if (ArchipelagoClient.Instance.SlotServerSettings.StartWithMasterMap)
+					{
+						Log.Debug("Enqueue bonus Master Map");
+						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-9999, "MasterMap"));
+					}
+
+					//#if DEBUG
+					//					if (ArchipelagoClient.Instance.Configuration.GodMode)
+					//					{
+					//						Log.Debug("Enqueue GodMode item collection");
+					//						ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(-99999, "GodModeInfinijump"));
+					//					}
+					//#endif
 
 					Log.Debug("Needs new game items");
 					ArchipelagoClient.Instance.HandleAllReceivedItems();
 					ArchipelagoClient.Instance.HandleAllCheckedLocations();
+
 					Log.Debug("Enqueued");
 				}
 				catch (NullReferenceException ex)
@@ -522,6 +374,7 @@ namespace Archipelago.ARobotNamedFight
 						MajorItem itemType = ItemTracker.Instance.allAssignedMajorItems[majorItemId];
 						Log.Debug($"Major item {itemLocation} (modified ID {majorItemId}) found to be {itemType}");
 						PlayerManager.instance.ItemCollected(itemType);
+						Automap.instance.RefreshItems();
 					}
 					else
 					{
@@ -540,17 +393,25 @@ namespace Archipelago.ARobotNamedFight
 				string value = keyValuePair.Value;
 				Log.Debug($"ConsumeReceiptQueue: location {key}. name {value}");
 
-				CollectReceivedItem(key);
+				CollectReceivedItem(key, value);
 			}
 		}
 
-		public void CollectReceivedItem(long itemLocation)
+		public void CollectReceivedItem(long itemLocation, string name)
 		{
 			Log.Debug($"In CollectReceivedItem for itemId {itemLocation}");
 			if (itemLocation == -9999)
 			{
-				Log.Debug("Receiving configured Explorb");
-				ReceiveMajorItem(MajorItem.Explorb);
+				if (name == "Explorb")
+				{
+					Log.Debug("Receiving configured Explorb");
+					ReceiveMajorItem(MajorItem.Explorb);
+				}
+				if (name == "MasterMap")
+				{
+					Log.Debug("Receiving configured Master Map");
+					ReceiveMajorItem(MajorItem.MasterMap);
+				}
 			}
 			else if (itemLocation == -99999)
 			{

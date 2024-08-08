@@ -22,8 +22,6 @@ namespace Archipelago.ARobotNamedFight.Patching
 				return false;
 			}
 
-			ItemTracker.Instance.InShrineOrShopCollection = false;
-
 			return true;
 
    //		 if (ArchipelagoClient.Instance.Configuration.SkipItemCollectScreenPopups)

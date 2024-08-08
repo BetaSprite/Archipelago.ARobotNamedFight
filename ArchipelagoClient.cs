@@ -151,12 +151,24 @@ namespace Archipelago.ARobotNamedFight
 					case "startWithExplorb":
 						SlotServerSettings.StartWithExplorb = slotD.Value.ToString() == "1";
 						break;
+					case "startWithMasterMap":
+						SlotServerSettings.StartWithMasterMap = slotD.Value.ToString() == "1";
+						break;
 					case "startWithWallJump":
 						SlotServerSettings.StartWithWallJump = slotD.Value.ToString() == "1";
 						break;
 					case "deathLink":
 						SlotServerSettings.DeathLink = slotD.Value.ToString() == "1";
 						break;
+					//case "damageBoost":
+					//	SlotServerSettings.DamageBoost = int.Parse(slotD.Value.ToString());
+					//	break;
+					//case "healthBoost":
+					//	SlotServerSettings.HealthBoost = int.Parse(slotD.Value.ToString());
+					//	break;
+					//case "energyBoost":
+					//	SlotServerSettings.EnergyBoost = int.Parse(slotD.Value.ToString());
+					//	break;
 				}
 			}
 
@@ -198,6 +210,11 @@ namespace Archipelago.ARobotNamedFight
 			if (ArchipelagoClient.Instance.SlotServerSettings.StartWithWallJump)
 			{
 				AchievementHelper.GiveAchievement(AchievementID.WallJump);
+			}
+
+			if (ArchipelagoClient.Instance.SlotServerSettings.StartWithMasterMap)
+			{
+				AchievementHelper.GiveAchievement(AchievementID.MasterMap);
 			}
 
 			if (ArchipelagoClient.Instance.SlotServerSettings.GrantAchievements == GrantAchievementsMode.Necessary)
@@ -318,17 +335,40 @@ namespace Archipelago.ARobotNamedFight
 				iQueueCountdown--;
 			}
 		}
-
+		
 		public void HandleAllCheckedLocations()
 		{
 			//TODOs:
 			// - When starting a new game, remove items from the map that have already been collected in previous runs (by location number, add minor IDs to activeGame.minorItemIdsCollected?)
 			Log.Debug($"In HandleAllCheckedLocations");
-			Log.Debug($"--- {session.Locations.AllLocationsChecked.Count} items to receive");
+			//ItemTracker.Instance.NextCheckNumber = session.Locations.AllLocationsChecked.Count;
+			Log.Debug($"--- {ItemTracker.Instance.NextCheckNumber} items to remove from the save file");
+			bool skippedFirst = false;
 			foreach (var location in session.Locations.AllLocationsChecked)
 			{
-				ItemTracker.Instance.LocationExpendQueue.Enqueue(location - LocationsStartID);
+				//Skip removal of the first location
+				if (location - LocationsStartID > 0)
+				{
+					ItemTracker.Instance.LocationExpendQueue.Enqueue(location - LocationsStartID);
+				}
+				else
+				{
+					Log.Debug($"Skipped item with ID {location - LocationsStartID}");
+					skippedFirst = true;
+				}
 			}
+
+			//Add removal of the last location, if we skipped the first
+			if (skippedFirst)
+			{
+				Log.Debug($"--- Removing item {ItemTracker.Instance.TotalLocationsInCurrentGame - 1} from the map");
+				ItemTracker.Instance.LocationExpendQueue.Enqueue(ItemTracker.Instance.TotalLocationsInCurrentGame - 1);
+			}
+		}
+
+		public long GetNextCheckNumberFromSession()
+		{
+			return session.Locations.AllLocationsChecked.Count;
 		}
 
 		private void Session_PacketReceived(ArchipelagoPacketBase packet)

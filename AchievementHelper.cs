@@ -24,6 +24,7 @@ namespace Archipelago.ARobotNamedFight
 			if (ArchipelagoClient.Instance.SlotServerSettings.GameMode == GameMode.MegaMap)
 			{
 				GiveAchievement(AchievementID.MegaMap);
+				//Add CoolantSeweres, CrystalMines
 			}
 		}
 

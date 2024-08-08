@@ -60,69 +60,10 @@ namespace Archipelago.ARobotNamedFight
 				{
 					MajorItem.None,
 
-					MajorItem.Arachnomorph,
-					MajorItem.BrightShell,
-					MajorItem.BuzzsawShell,
-					MajorItem.CognitiveStabilizer,
-					MajorItem.Dash,
-					MajorItem.DiveShell,
-					MajorItem.DoubleJump,
-					MajorItem.GlowBot,
-					MajorItem.HeatShell,
-					MajorItem.HoverBoots,
-					MajorItem.Infinijump,
-					MajorItem.JetPack,
-					MajorItem.PhaseShell,
-					MajorItem.PowerJump,
-					MajorItem.Slide,
-					MajorItem.UpDog,
-					MajorItem.ViridianShell,
-
-					MajorItem.ElectroCharge,
-					MajorItem.ExplosiveBolt,
-					MajorItem.FireBolt,
-
-					MajorItem.BuzzsawGun,
-					MajorItem.Flamethrower,
-					MajorItem.HellfireCannon,
-					MajorItem.Kaboomerang,
-					MajorItem.LaserBeam,
-					MajorItem.LightningGun,
-					MajorItem.NecroluminantSpray,
-					MajorItem.Phaserang,
-					MajorItem.PhaseShot,
-					MajorItem.PulseMGL,
-					MajorItem.RailGun,
-					MajorItem.RocketLauncher,
-
 					MajorItem.TheRedKey,
 					MajorItem.TheGreenKey,
 					MajorItem.TheBlueKey,
 					MajorItem.TheBlackKey,
-
-					//MajorItem.DamageBoostAura,
-					//MajorItem.AttackBoostAura,
-					//MajorItem.SpeedBoostAura,
-					//MajorItem.CelestialCharge,
-					//MajorItem.CloakingDevice,
-					//MajorItem.EnergyAxe,
-					//MajorItem.ETHChip,
-					//MajorItem.TheGlitchedKey,
-					//MajorItem.HTSChip,
-					//MajorItem.ModuleTransmogrifier,
-					//MajorItem.NanoswarmGenerator,
-					//MajorItem.OrphielsAltar,
-					//MajorItem.PersonalTeleporter,
-					//MajorItem.PhantasmalOrbs,
-					//MajorItem.PowerShield,
-					//MajorItem.RadialBolts,
-					//MajorItem.RepairKit,
-					//MajorItem.SearchBurst,
-					//MajorItem.SedativeCloud,
-					//MajorItem.SpontaneousGenerator,
-					//MajorItem.ToxinCloud,
-					//MajorItem.WaveBomb,
-					//MajorItem.ZurvansPentangle,
 				}
 			},
 			{
@@ -136,6 +77,19 @@ namespace Archipelago.ARobotNamedFight
 				{
 					MajorItem.None,
 
+					MajorItem.TheRedKey,
+					MajorItem.TheGreenKey,
+					MajorItem.TheBlueKey,
+					MajorItem.TheBlackKey,
+				}
+			}
+		};
+
+		private static Dictionary<GameMode, List<MajorItem>> MajorItemTraversalByGameMode { get; set; } = new Dictionary<GameMode, List<MajorItem>>()
+		{
+			{
+				GameMode.Normal, new List<MajorItem>()
+				{
 					MajorItem.Arachnomorph,
 					MajorItem.BrightShell,
 					MajorItem.BuzzsawShell,
@@ -170,50 +124,86 @@ namespace Archipelago.ARobotNamedFight
 					MajorItem.PulseMGL,
 					MajorItem.RailGun,
 					MajorItem.RocketLauncher,
+				}
+			},
+			{
+				GameMode.ClassicBossRush, new List<MajorItem>()
+				{
+					MajorItem.None,
+				}
+			},
+			{
+				GameMode.Exterminator, new List<MajorItem>()
+				{
+					MajorItem.Arachnomorph,
+					MajorItem.BrightShell,
+					MajorItem.BuzzsawShell,
+					MajorItem.CognitiveStabilizer,
+					MajorItem.Dash,
+					MajorItem.DiveShell,
+					MajorItem.DoubleJump,
+					MajorItem.GlowBot,
+					MajorItem.HeatShell,
+					MajorItem.HoverBoots,
+					MajorItem.Infinijump,
+					MajorItem.JetPack,
+					MajorItem.PhaseShell,
+					MajorItem.PowerJump,
+					MajorItem.Slide,
+					MajorItem.UpDog,
+					MajorItem.ViridianShell,
 
-					MajorItem.TheRedKey,
-					MajorItem.TheGreenKey,
-					MajorItem.TheBlueKey,
-					MajorItem.TheBlackKey,
+					MajorItem.ElectroCharge,
+					MajorItem.ExplosiveBolt,
+					MajorItem.FireBolt,
 
-					//MajorItem.DamageBoostAura,
-					//MajorItem.AttackBoostAura,
-					//MajorItem.SpeedBoostAura,
-					//MajorItem.CelestialCharge,
-					//MajorItem.CloakingDevice,
-					//MajorItem.EnergyAxe,
-					//MajorItem.ETHChip,
-					//MajorItem.TheGlitchedKey,
-					//MajorItem.HTSChip,
-					//MajorItem.ModuleTransmogrifier,
-					//MajorItem.NanoswarmGenerator,
-					//MajorItem.OrphielsAltar,
-					//MajorItem.PersonalTeleporter,
-					//MajorItem.PhantasmalOrbs,
-					//MajorItem.PowerShield,
-					//MajorItem.RadialBolts,
-					//MajorItem.RepairKit,
-					//MajorItem.SearchBurst,
-					//MajorItem.SedativeCloud,
-					//MajorItem.SpontaneousGenerator,
-					//MajorItem.ToxinCloud,
-					//MajorItem.WaveBomb,
-					//MajorItem.ZurvansPentangle,
+					MajorItem.BuzzsawGun,
+					MajorItem.Flamethrower,
+					MajorItem.HellfireCannon,
+					MajorItem.Kaboomerang,
+					MajorItem.LaserBeam,
+					MajorItem.LightningGun,
+					MajorItem.NecroluminantSpray,
+					MajorItem.Phaserang,
+					MajorItem.PhaseShot,
+					MajorItem.PulseMGL,
+					MajorItem.RailGun,
+					MajorItem.RocketLauncher,
 				}
 			}
 		};
 
-		public static bool MajorItemIsBlacklisted(MajorItem item)
+		public static bool MajorItemNeedsSpecialHandling(MajorItem item)
 		{
+			bool retVal = false;
 			GameMode mode = SaveGameManager.activeSlot.activeGameData.gameMode;
 
 			if (MajorItemBlacklistByGameMode.ContainsKey(mode))
 			{
-				return MajorItemBlacklistByGameMode[mode].Contains(item);
+				retVal |= MajorItemBlacklistByGameMode[mode].Contains(item);
+			}
+
+			if (MajorItemTraversalByGameMode.ContainsKey(mode))
+			{
+				retVal |= MajorItemTraversalByGameMode[mode].Contains(item);
+			}
+
+			if (item == MajorItem.None) retVal |= true;
+
+			return retVal;
+		}
+
+		public static bool MajorItemIsTraversal(MajorItem item)
+		{
+			GameMode mode = SaveGameManager.activeSlot.activeGameData.gameMode;
+
+			if (MajorItemTraversalByGameMode.ContainsKey(mode))
+			{
+				return MajorItemTraversalByGameMode[mode].Contains(item);
 			}
 
 			if (item == MajorItem.None) return true;
-			
+
 			return false;
 		}
 

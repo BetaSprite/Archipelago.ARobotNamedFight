@@ -16,6 +16,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 			{
 				Log.Debug("Resetting item tracker after layout has been generated");
 				ItemTracker.Instance.Reset();
+				ItemTracker.Instance.RefreshItemTracker();
 			}
 		}
 	}

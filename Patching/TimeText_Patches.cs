@@ -25,7 +25,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 		{
 			if (____timeText == null)
 			{
-				Log.Error("No ____timeText found in TimeText_Update_Patch.Update. =/");
+				Log.Error("No ____timeText found in TimeText_Update_Patch.Postfix. =/");
 			}
 
 			//TODO:  See if I can make the timer cover more space.  Maybe get the RectTransform from the gameobject?
@@ -42,7 +42,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 			ItemTracker.Instance.ConsumeLocationExpendQueue();
 			ItemTracker.Instance.ConsumeReceiptQueue();
 
-			//Each second, as long as we're not picking up an item already, consume items from the receipt queue
+			//Each second, as long as we're not picking up an item already, consume items from the notification queue
 			if (_lastTimeText != ____timeText.text && !ItemTracker.Instance.InShrineOrShopCollection && !ItemTracker.Instance.SkipSendCheck())
 			{
 				_lastTimeText = ____timeText.text;

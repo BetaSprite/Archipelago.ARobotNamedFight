@@ -12,10 +12,6 @@ namespace Archipelago.ARobotNamedFight
 {
 	public class ArchipelagoConfiguration
 	{
-#if DEBUG
-		public bool GodMode = true;
-#endif
-
 		public string url = "archipelago.gg:38281";
 		public string slot = "";
 		public string pass = null;

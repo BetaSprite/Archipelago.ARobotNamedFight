@@ -33,6 +33,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 			{
 				Log.Debug("In GameStartState_Continue_Patch.Postfix");
 				ItemTracker.Instance.Reset();
+				ItemTracker.Instance.RefreshItemTracker();
 			}
 			catch (Exception ex)
 			{

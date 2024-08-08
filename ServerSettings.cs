@@ -11,8 +11,9 @@ namespace Archipelago.ARobotNamedFight
 		public GameMode GameMode { get; set; }
 		public GrantAchievementsMode GrantAchievements { get; set; }
 		public bool StartWithExplorb { get; set; }
+		public bool StartWithMasterMap { get; set; }
 		public bool StartWithWallJump { get; set; }
-		public bool DeathLink {  get; set; }
+		public bool DeathLink { get; set; }
 	}
 
 	public enum GrantAchievementsMode

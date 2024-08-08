@@ -18,13 +18,16 @@ namespace Archipelago.ARobotNamedFight.Patching
 
 			if (!ItemTracker.Instance.SkipSendCheck(true))
 			{
+				//Skip these steps for items picked up as enemy drops
 				if (ItemTracker.Instance.LastPickedMinorItemGlobal > -99)
 				{
-					long itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal;
+					//long itemCheckNumber = ItemTracker.Instance.LastPickedMinorItemGlobal;
+					long itemCheckNumber = ItemTracker.Instance.NextCheckNumber;
 					//ItemTracker.Instance.ModItem(itemType);
 					ArchipelagoClient.Instance.SendCheck(itemCheckNumber);
 					SaveGameManager.instance.Save();
 					Automap.instance.RefreshItems();
+					//ItemTracker.Instance.NextCheckNumber++;
 					return false;
 				}
 			}
@@ -47,13 +50,9 @@ namespace Archipelago.ARobotNamedFight.Patching
 
 			MajorItemInfo itemInfo = new MajorItemInfo() { fullName = "Error", description = "Error" };
 			ItemManager.items.TryGetValue(itemType, out itemInfo);
-			if (!ItemTracker.Instance.SkipSendCheck(true) && !References.MajorItemIsBlacklisted(itemType))
+			if (!ItemTracker.Instance.SkipSendCheck(true) && !References.MajorItemNeedsSpecialHandling(itemType))
 			{
-				long itemCheckNumber = -99;
-				if (ItemTracker.Instance.allAssignedMajorItemsReverse.ContainsKey(itemType))
-				{
-					itemCheckNumber = ItemTracker.Instance.allAssignedMajorItemsReverse[itemType] + ItemTracker.Instance.allAssignedMinorItems.Count;
-				}
+				long itemCheckNumber = ItemTracker.Instance.NextCheckNumber;
 
 				Log.Debug($"Item check number: {itemCheckNumber}");
 
@@ -62,6 +61,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 					ArchipelagoClient.Instance.SendCheck(itemCheckNumber);
 					PlayerManager.instance.ItemCollected(itemType);
 					Automap.instance.RefreshItems();
+					//ItemTracker.Instance.NextCheckNumber++;
 					return false;
 				}
 			}
@@ -136,33 +136,36 @@ namespace Archipelago.ARobotNamedFight.Patching
 	{
 		static void Postfix(float damageAmount)
 		{
-			if (ArchipelagoClient.Instance.Configuration.GodMode)
-			{
-				Player.instance.health = Player.instance.maxHealth;
-				Player.instance.energy = Player.instance.maxEnergy;
-				Player.instance.grayScrap += 20;
-				Player.instance.redScrap += 1;
-				Player.instance.greenScrap += 1;
-				Player.instance.blueScrap += 1;
-				var statMod = Player.instance.gameObject.AddComponent<TemporaryCelestialCharge>();
-				statMod.Equip(Player.instance, 60f);
-			}
+			Player.instance.health = Player.instance.maxHealth;
+			Player.instance.energy = Player.instance.maxEnergy;
+			Player.instance.grayScrap += 20;
+			Player.instance.redScrap += 1;
+			Player.instance.greenScrap += 1;
+			Player.instance.blueScrap += 1;
 
-			string dataStorageKey = $"Test";
-			Log.Debug($"dataStorageKey = {dataStorageKey}");
-			string runsCompletedDataStorage = ArchipelagoClient.Instance.TryGetDataStorage(dataStorageKey);
+			ItemTracker.Instance.AddSkipCheck();
+			Player.instance.CollectMinorItem(MinorItemType.DamageModule);
+			ItemTracker.Instance.AddSkipCheck();
+			Player.instance.CollectMinorItem(MinorItemType.ShotSpeedModule);
 
-			Log.Debug($"runsCompletedDataStorage = {runsCompletedDataStorage}");
-			int runsCompleted = 0;
-			if (!string.IsNullOrEmpty(runsCompletedDataStorage))
-			{
-				int.TryParse(runsCompletedDataStorage, out runsCompleted);
-			}
-			runsCompleted++;
+			var statMod = Player.instance.gameObject.AddComponent<TemporaryCelestialCharge>();
+			statMod.Equip(Player.instance, 60f);
 
-			Log.Debug($"New runsCompleted value = {runsCompleted}");
-			ArchipelagoClient.Instance.SetDataStorage(dataStorageKey, runsCompleted.ToString());
-			Log.Debug("After SetDataStorage");
+			//string dataStorageKey = $"Test";
+			//Log.Debug($"dataStorageKey = {dataStorageKey}");
+			//string runsCompletedDataStorage = ArchipelagoClient.Instance.TryGetDataStorage(dataStorageKey);
+
+			//Log.Debug($"runsCompletedDataStorage = {runsCompletedDataStorage}");
+			//int runsCompleted = 0;
+			//if (!string.IsNullOrEmpty(runsCompletedDataStorage))
+			//{
+			//	int.TryParse(runsCompletedDataStorage, out runsCompleted);
+			//}
+			//runsCompleted++;
+
+			//Log.Debug($"New runsCompleted value = {runsCompleted}");
+			//ArchipelagoClient.Instance.SetDataStorage(dataStorageKey, runsCompleted.ToString());
+			//Log.Debug("After SetDataStorage");
 		}
 	}
 #endif
