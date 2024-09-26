@@ -21,7 +21,7 @@ namespace Archipelago.ARobotNamedFight
 
 		public static Dictionary<GameMode, int> LocationIDUpperBoundExclusivePerGameMode = new Dictionary<GameMode, int>()
 		{
-			{ GameMode.Normal, 36 },
+			{ GameMode.Normal, 38 },
 			{ GameMode.ClassicBossRush, 63 },
 			{ GameMode.Exterminator, 147 },
 		};

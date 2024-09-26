@@ -46,11 +46,11 @@ namespace Archipelago.ARobotNamedFight
 
 		public Dictionary<long, MajorItem> allAssignedMajorItems { get; private set; } = new Dictionary<long, MajorItem>();
 
-		public Dictionary<MajorItem, long> allAssignedMajorItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
+		public Dictionary<MajorItem, long> allAssignedMajorItemsReverseLookup { get; private set; } = new Dictionary<MajorItem, long>();
 
-		public Dictionary<long, MajorItem> traversalItems { get; private set; } = new Dictionary<long, MajorItem>();
+		public Dictionary<int, MajorItem> traversalItems { get; private set; } = new Dictionary<int, MajorItem>();
 
-		public Dictionary<MajorItem, long> traversalItemsReverse { get; private set; } = new Dictionary<MajorItem, long>();
+		public Dictionary<MajorItem, int> traversalItemsReverse { get; private set; } = new Dictionary<MajorItem, int>();
 
 		public List<MajorItemInfo> availableNonTraversalItems { get; private set; } = new List<MajorItemInfo>();
 
@@ -68,11 +68,13 @@ namespace Archipelago.ARobotNamedFight
 		public void Reset()
 		{
 			//ItemTracker.Instance.NextCheckNumber = 0;
-			LastPickedMinorItemGlobal = -99;
+			LastPickedMinorItemGlobal = 0;
 			//MinorItemsCollected.Clear();
+			traversalItems.Clear();
+			traversalItemsReverse.Clear();
 			allAssignedMinorItems.Clear();
 			allAssignedMajorItems.Clear();
-			allAssignedMajorItemsReverse.Clear();
+			allAssignedMajorItemsReverseLookup.Clear();
 			CheckIgnores.Clear();
 			CheckForces.Clear();
 
@@ -107,7 +109,7 @@ namespace Archipelago.ARobotNamedFight
 
 		public bool SkipSendCheck(bool consume = false)
 		{
-			Log.Debug($"SkipSendCheck. consume = {consume}. PickingUpSkipCheck = {PickingUpSkipCheck}. InShrineOrShopCollection = {InShrineOrShopCollection}.");
+			//Log.Debug($"SkipSendCheck. consume = {consume}. PickingUpSkipCheck = {PickingUpSkipCheck}. InShrineOrShopCollection = {InShrineOrShopCollection}.");
 			bool bRet = false;
 			if (InShrineOrShopCollection)
 			{
@@ -139,12 +141,13 @@ namespace Archipelago.ARobotNamedFight
 		public void ReplaceMajorItemInRooms(MajorItem majorItemType)
 		{
 			Log.Debug($"In ReplaceMajorItemInRooms for {majorItemType}");
-			if (!References.MajorItemNeedsSpecialHandling(majorItemType))
+			var majorItemsFoundInRooms = GetMajorItemsAndRooms();
+
+			SaveGameData activeGame = SaveGameManager.activeGame;
+			if (!References.MajorItemIsTraversal(majorItemType))
 			{
-				SaveGameData activeGame = SaveGameManager.activeGame;
 				RoomAbstract targetRoom = null;
 
-				var majorItemsFoundInRooms = GetMajorItemsAndRooms();
 				if (majorItemsFoundInRooms.ContainsKey(majorItemType)) { targetRoom = majorItemsFoundInRooms[majorItemType]; }
 
 				if (targetRoom == null)
@@ -160,25 +163,19 @@ namespace Archipelago.ARobotNamedFight
 					targetRoom.majorItem = newItem;
 
 					Log.Debug($"Attempting replacement in item tracker");
-					if (allAssignedMajorItemsReverse.ContainsKey(majorItemType))
+					if (allAssignedMajorItemsReverseLookup.ContainsKey(majorItemType))
 					{
-						long index = allAssignedMajorItemsReverse[majorItemType];
+						long index = allAssignedMajorItemsReverseLookup[majorItemType];
 						Log.Debug($"Original index {index} for {majorItemType}, and {allAssignedMajorItems[index]} is also found");
 						allAssignedMajorItems[index] = newItem;
 						Log.Debug($"Changed to {allAssignedMajorItems[index]}");
-						allAssignedMajorItemsReverse.Remove(majorItemType);
-						allAssignedMajorItemsReverse.Add(newItem, index);
-						Log.Debug($"And after that, reverse lookup for {newItem} has {allAssignedMajorItemsReverse[newItem]} at index {index}.");
+						allAssignedMajorItemsReverseLookup.Remove(majorItemType);
+						allAssignedMajorItemsReverseLookup.Add(newItem, index);
+						Log.Debug($"And after that, reverse lookup for {newItem} has {allAssignedMajorItemsReverseLookup[newItem]} at index {index}.");
 					}
 
 					try
 					{
-						Log.Debug($"Swapping item in itemOrder");
-						if (activeGame.layout.itemOrder != null && activeGame.layout.itemOrder.Contains(majorItemType))
-						{
-							activeGame.layout.itemOrder.Remove(majorItemType);
-							activeGame.layout.itemOrder.Add(newItem);
-						}
 						Log.Debug($"Swapping item in bonusItemsAdded");
 						if (activeGame.layout.bonusItemsAdded != null && activeGame.layout.bonusItemsAdded.Contains(majorItemType))
 						{
@@ -200,7 +197,47 @@ namespace Archipelago.ARobotNamedFight
 			}
 			else
 			{
-				Log.Debug($"{majorItemType} is blacklisted, so we won't replace it in the map.");
+				if (!activeGame.layout.itemOrder.Contains(majorItemType))
+				{
+					Log.Error($"Couldn't find major item {majorItemType} in rooms!  Must be bonus.");
+				}
+				else
+				{
+					MajorItem newItem = GetUnusedMajorItem(majorItemsFoundInRooms);
+
+					//Make the swap
+					Log.Debug($"Swapping major item {majorItemType} in map with dummy item {newItem}");
+
+					int i = traversalItemsReverse[majorItemType];
+
+					if (activeGame.layout.itemOrder[i - 1] == majorItemType)
+					{
+						activeGame.layout.itemOrder[i - 1] = newItem;
+						traversalItems[i] = newItem;
+						traversalItemsReverse.Remove(majorItemType);
+						traversalItemsReverse.Add(newItem, i);
+					}
+
+					try
+					{
+						Log.Debug($"Swapping item in bonusItemsAdded");
+						if (activeGame.layout.bonusItemsAdded != null && activeGame.layout.bonusItemsAdded.Contains(majorItemType))
+						{
+							activeGame.layout.bonusItemsAdded.Remove(majorItemType);
+							activeGame.layout.bonusItemsAdded.Add(newItem);
+						}
+						Log.Debug($"Swapping item in itemsCollected");
+						if (activeGame.itemsCollected != null && activeGame.itemsCollected.Contains(majorItemType))
+						{
+							activeGame.itemsCollected.Remove(majorItemType);
+							activeGame.itemsCollected.Add(newItem);
+						}
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex);
+					}
+				}
 			}
 		}
 
@@ -230,9 +267,13 @@ namespace Archipelago.ARobotNamedFight
 
 			//Find a new, unused major item that isn't blacklisted
 			System.Random random = new System.Random();
+			SaveGameData activeGame = SaveGameManager.activeGame;
 			MajorItem itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 			Log.Debug($"Attempt to replace item with {itemType}");
-			while (majorItemsFoundInRooms.ContainsKey(itemType) || References.MajorItemNeedsSpecialHandling(itemType) || Player.instance.itemsPossessed.Contains(itemType))
+			while (majorItemsFoundInRooms.ContainsKey(itemType) || 
+				References.MajorItemNeedsSpecialHandling(itemType) || 
+				Player.instance.itemsPossessed.Contains(itemType) ||
+				activeGame.layout.itemOrder.Contains(itemType))
 			{
 				itemType = availableNonTraversalItems[random.Next(availableNonTraversalItems.Count)].type;
 				Log.Debug($"Nope, try {itemType} instead?");
@@ -253,8 +294,8 @@ namespace Archipelago.ARobotNamedFight
 					SaveGameData activeGame = SaveGameManager.activeGame;
 
 					Log.Debug($"Loop through all rooms. Count: {activeGame.layout.roomAbstracts.Count}");
-					int iRegularMajorItemCounter = 0;
-					int iTraversalMajorItemCount = 0;
+					int iRegularMajorItemCounter = 1;
+					int iTraversalMajorItemCount = 1;  //Start at 1, due to using the names to parse later on
 
 					foreach (var majorItem in activeGame.layout.itemOrder)
 					{
@@ -282,7 +323,7 @@ namespace Archipelago.ARobotNamedFight
 						{
 							Log.Debug($"Adding major item {roomAbstract.majorItem} to list with ID {iRegularMajorItemCounter}.");
 							allAssignedMajorItems.Add(iRegularMajorItemCounter, roomAbstract.majorItem);
-							allAssignedMajorItemsReverse.Add(roomAbstract.majorItem, iRegularMajorItemCounter);
+							allAssignedMajorItemsReverseLookup.Add(roomAbstract.majorItem, iRegularMajorItemCounter);
 							iRegularMajorItemCounter++;
 						}
 						else if (roomAbstract.majorItem != MajorItem.None)
@@ -446,6 +487,32 @@ namespace Archipelago.ARobotNamedFight
 					Log.Debug($"Minor item {minorItemType} collected from queue");
 					NotificationManager.Instance.NotificationQueue.Enqueue($"R:{minorItemType}");
 				}
+				else if (name.StartsWith("ProgItem"))
+				{
+					if (int.TryParse(name.Substring(8), out int whichProg))
+					{
+						if (ItemTracker.Instance.traversalItems.ContainsKey(whichProg))
+						{
+							var majorItemType = ItemTracker.Instance.traversalItems[whichProg];
+							if (References.MajorItemIsTraversal(majorItemType))
+							{
+								ReceiveMajorItem(majorItemType);
+							}
+							else
+							{
+								Log.Warning($"Received {name}, which we've already received and replaced with {majorItemType}! Ignoring, but somehow this item was sent multiple times!");
+							}
+						}
+						else
+						{
+							Log.Debug($"traversalItems collection did not contain entry for {whichProg}: {Newtonsoft.Json.JsonConvert.SerializeObject(ItemTracker.Instance.traversalItems)}");
+						}
+					}
+					else
+					{
+						Log.Debug($"Failed to parse number from item {name} at location {itemLocation}!");
+					}
+				}
 				else
 				{
 					long majorItemId = itemLocation - ItemTracker.Instance.allAssignedMinorItems.Count;
@@ -475,6 +542,8 @@ namespace Archipelago.ARobotNamedFight
 				var currentRoom = LayoutManager.CurrentRoom;
 				Player.instance.DropEquippedActiveItem(Player.instance.transform.position, currentRoom);
 			}
+
+			ReplaceMajorItemInRooms(itemType);
 
 			ItemTracker.Instance.AddSkipCheck();
 			Player.instance.CollectMajorItem(itemType);

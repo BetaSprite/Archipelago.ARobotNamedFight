@@ -193,8 +193,9 @@ namespace Archipelago.ARobotNamedFight
 				try
 				{
 					var item = receivedItemsHelper.DequeueItem();
+					Log.Debug($"Item received from AP Server! ID: {item.Item}.  Location: {item.Location}.  Flags: {item.Flags}.  Player: {item.Player}.");
 					string itemName = session.Items.GetItemName(item.Item);
-					Log.Debug($"Item received from AP Server! Name: {itemName}. ID: {item.Item}.  Location: {item.Location}.  Flags: {item.Flags}.  Player: {item.Player}.");
+					Log.Debug($"Name: {itemName}.");
 
 					//CollectReceivedItem(item.Location);
 					ItemTracker.Instance.ReceiptQueue.Enqueue(new KeyValuePair<long, string>(item.Item - LocationsStartID, itemName));

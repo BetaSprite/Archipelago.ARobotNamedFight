@@ -13,7 +13,7 @@ namespace Archipelago.ARobotNamedFight.Patching
 	{
 		static bool Prefix(MinorItemType itemType)
 		{
-			Log.Debug($"CollectMinorItemPatch.Prefix picked up a {itemType}"); //, and I'm returning a {MinorItemType.GlitchModule}");
+			Log.Debug($"CollectMinorItemPatch.Prefix picked up a {itemType} with a last picked item number {ItemTracker.Instance.LastPickedMinorItemGlobal}"); //, and I'm returning a {MinorItemType.GlitchModule}");
 			//itemType = MinorItemType.GlitchModule;
 
 			if (!ItemTracker.Instance.SkipSendCheck(true))
@@ -35,10 +35,10 @@ namespace Archipelago.ARobotNamedFight.Patching
 			return true;
 		}
 
-		static void Postfix(MinorItemType itemType)
-		{
-			Log.Debug($"CollectMinorItemPatch.Postfix picked up a {itemType}");
-		}
+		//static void Postfix(MinorItemType itemType)
+		//{
+		//	Log.Debug($"CollectMinorItemPatch.Postfix picked up a {itemType}");
+		//}
 	}
 
 	[HarmonyPatch(typeof(Player), nameof(Player.CollectMajorItem))]
@@ -50,19 +50,34 @@ namespace Archipelago.ARobotNamedFight.Patching
 
 			MajorItemInfo itemInfo = new MajorItemInfo() { fullName = "Error", description = "Error" };
 			ItemManager.items.TryGetValue(itemType, out itemInfo);
-			if (!ItemTracker.Instance.SkipSendCheck(true) && !References.MajorItemNeedsSpecialHandling(itemType))
+			if (!ItemTracker.Instance.SkipSendCheck(true))
 			{
-				long itemCheckNumber = ItemTracker.Instance.NextCheckNumber;
+				bool sendCheck = !References.MajorItemNeedsSpecialHandling(itemType);
 
-				Log.Debug($"Item check number: {itemCheckNumber}");
-
-				if (itemCheckNumber > -99)
+				if (References.MajorItemIsTraversal(itemType))
 				{
-					ArchipelagoClient.Instance.SendCheck(itemCheckNumber);
-					PlayerManager.instance.ItemCollected(itemType);
-					Automap.instance.RefreshItems();
-					//ItemTracker.Instance.NextCheckNumber++;
-					return false;
+					long index = ItemTracker.Instance.traversalItemsReverse[itemType];
+
+					if (index == 4 || index == 7)
+					{
+						sendCheck = true;
+					}
+				}
+
+				if (sendCheck)
+				{
+					long itemCheckNumber = ItemTracker.Instance.NextCheckNumber;
+
+					Log.Debug($"Item check number: {itemCheckNumber}");
+
+					if (itemCheckNumber > -99)
+					{
+						ArchipelagoClient.Instance.SendCheck(itemCheckNumber);
+						PlayerManager.instance.ItemCollected(itemType);
+						Automap.instance.RefreshItems();
+						//ItemTracker.Instance.NextCheckNumber++;
+						return false;
+					}
 				}
 			}
 
